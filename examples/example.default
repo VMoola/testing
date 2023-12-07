@@ -1,0 +1,14 @@
+[Distribution]
+Distribution=fedora
+Release=39
+
+[Output]
+Format=raw_gpt
+
+[Content]
+Cache=mkosi.cache/
+BasePackages=yes
+Packages=vim,git,gcc
+Password=pass
+Autologin=yes
+RootSize=3G

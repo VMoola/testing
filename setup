@@ -1,0 +1,5 @@
+#! /bin/bash
+#mkosi sets up the image. This needs to be re-run anytime we want a change in mkosi.default to change the image specs.
+sudo mkosi -f
+#-bi stands for boot image. Running this with an interactive console automatically runs through the initial Fedora distro setup for us
+sudo systemd-nspawn -bi image.raw
