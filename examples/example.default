@@ -8,7 +8,7 @@ Format=raw_gpt
 [Content]
 Cache=mkosi.cache/
 BasePackages=yes
-Packages=vim,git,gcc,sudo,automake
+Packages=vim,git,gcc,sudo,automake,dwarves
 Password=pass
 Autologin=yes
 RootSize=10G
