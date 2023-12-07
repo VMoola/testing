@@ -3,9 +3,13 @@
 KERNEL_PATH="$HOME/kernel/compiled/arch/x86_64/boot/bzImage"
 BOOT_FILE="image.raw"
 MEMORY="1G"
+MONITOR="stdio"
+DISPLAY="gtk"
 #Simple qemu command. We need the \ to separate each argument otherwise qemu gets confused. Customize as desired.
 qemu-kvm -machine accel=kvm \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
-     -append "root=/dev/sda1 rw rootfstype=ext4 console=ttyS0" \
-     -m $MEMORY
+     -append "root=/dev/sda1 rw rootfstype=ext4 console=ttSy0" \
+     -m $MEMORY \
+     -monitor $MONITOR \
+     -display $DISPLAY
