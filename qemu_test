@@ -6,10 +6,13 @@ MEMORY="1G"
 MONITOR="stdio"
 DISPLAY="gtk"
 #Simple qemu command. We need the \ to separate each argument otherwise qemu gets confused. Customize as desired.
-qemu-kvm -machine accel=kvm \
+qemu-kvm \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
      -append "root=/dev/sda1 rw rootfstype=ext4 console=ttSy0" \
      -m $MEMORY \
      -monitor $MONITOR \
-     -display $DISPLAY
+     -display $DISPLAY \
+     -smp cores=4 \
+     -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0 #for getting access to files, anything in the path directory will work
+#    -machine accel=kvm (this can be used if kvm hardware acceleration is supported)
