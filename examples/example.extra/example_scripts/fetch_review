@@ -1,0 +1,23 @@
+#! /bin/bash
+
+TYPE="mbox" #default is respondable mailbox, for application pass in "am"
+SRC=
+DST=$PWD
+
+if [ $# -gt 0 ];
+then
+	SRC=$1
+fi
+if [ $# -gt 1 ];
+then
+	DST="$DST/$2"
+fi
+if [ $# -gt 2 ];
+then
+	TYPE=$3
+fi
+
+COMMAND="b4 $TYPE $SRC -o $DST"
+
+echo $COMMAND
+eval $COMMAND
