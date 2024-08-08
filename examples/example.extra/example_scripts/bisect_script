@@ -18,15 +18,19 @@ THREADS="8"
 #3 - ARCH, x86_64 if unsure
 if [ $# -gt 0 ];
 then
-	ARGUMENTS=$1
+	NUM_COMMITS=$1
 fi
 if [ $# -gt 1 ];
 then
-	COMPILER=$2
+	ARGUMENTS=$2
 fi
 if [ $# -gt 2 ];
 then
-	ARCH=$3
+	COMPILER=$3
+fi
+if [ $# -gt 3 ];
+then
+	ARCH=$4
 fi
 
 COMMAND="make -s -j$THREADS O=$BUILD_DIR $ARGUMENTS CC='$COMPILER' ARCH=$ARCH"
