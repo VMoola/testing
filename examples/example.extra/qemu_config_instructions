@@ -7,6 +7,7 @@ Common dependencies are:
 LOCKDEP (if anything lock related)
 DEBUG_VM - Everything in general
 DWARF_TOOLCHAIN and BTF - pahole for modifying structures
+MODULES_FORCE_UNLOAD - for unloading test modules even if kernel is unsafe
 
 "make debug.config" is good for thorough intensive testing, just sometimes
 bigger/more excessive than necessary.
