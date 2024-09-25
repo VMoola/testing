@@ -9,8 +9,9 @@ DISPLAY="gtk"
 qemu-kvm \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
-     -append "root=/dev/sda1 rw rootfstype=ext4 console=ttSy0" \
+     -append "root=/dev/sda1 rw rootfstype=ext4 console=ttSy0 nokaslr" \
      -m $MEMORY \
+     -s \
      -monitor $MONITOR \
      -display $DISPLAY \
      -smp cores=4 \
