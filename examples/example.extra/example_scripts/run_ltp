@@ -1,0 +1,15 @@
+#! /bin/bash
+TEST_SCRIPT_DIR="/opt/ltp/testcases/bin"
+
+if [ $# -eq 0 ];
+then
+	echo "Running ALL installed testcases"
+fi
+
+TEST_REGEX=$1
+
+
+for i in $(find $TEST_SCRIPT_DIR/$TEST_REGEX*)
+do
+	$i
+done

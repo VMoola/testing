@@ -1,0 +1,29 @@
+# LTP instructions
+In mkosi.extra:
+``` git clone https://github.com/linux-test-project/ltp.git```
+Then in qemu:
+```
+cd /ltp
+make autotools
+./configure
+#now to build and install the tests
+make
+make install
+```
+
+Now you can navigate to /opt/ltp to run the tests.
+
+# For smaller projects
+If we don't want to do a FULL test suite every time, we can simply
+change into the test directory and then build and execute the tests from
+there.
+
+```
+cd testcases/kernel/mem/hugetlb
+make
+make install
+```
+
+Now you can find the testcases in /opt/ltp/testcases/bin to run the tests.
+See the included script for running our desired tests (because its a pain
+to install all the ltp tests to get runltp happy).
