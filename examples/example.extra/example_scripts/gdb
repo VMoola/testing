@@ -1,0 +1,12 @@
+#! /bin/bash
+BUILD_DIR="compiled/"
+KERNEL="vmlinux"
+MODULES_DIR="/root/testing/mkosi.extra/modules"
+
+#MAKE SURE that we have /[USER]/.config/gdb/gdbinit
+#with add-auto-load-safe-path /root/kernel/
+gdb \
+	-s "$BUILD_DIR$KERNEL" -q \
+	-ex "target remote localhost:1234" \
+	-ex "lx-symbols $MODULES_DIR" \
+	-ex 'c'
