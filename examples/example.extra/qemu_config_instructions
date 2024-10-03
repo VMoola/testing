@@ -14,3 +14,7 @@ GDB_SCRIPTS - debugging symbols for gdb (must run "make scripts_gdb")
 bigger/more excessive than necessary.
 
 *pahole doesn't work in qemu, but it does work in a systemd container*
+
+We can configure dract and use "dracut <output_file>" to generate an
+initrd for qemu's parameter if we want to preload modules for the kernel
+to have access to. Just pass "initrd=<dracut_file>" to qemu as well.
