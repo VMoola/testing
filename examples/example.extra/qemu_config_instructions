@@ -18,3 +18,5 @@ bigger/more excessive than necessary.
 We can configure dract and use "dracut <output_file>" to generate an
 initrd for qemu's parameter if we want to preload modules for the kernel
 to have access to. Just pass "initrd=<dracut_file>" to qemu as well.
+
+To change between the qemu window and qemu monitor, use "ALT + {1,2}"

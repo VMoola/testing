@@ -3,8 +3,8 @@
 KERNEL_PATH="$HOME/kernel/compiled/arch/x86_64/boot/bzImage"
 BOOT_FILE="image.raw"
 MEMORY="1G"
-MONITOR="stdio"
-DISPLAY="gtk"
+MONITOR="vc"
+DISPLAY="curses"
 #Simple qemu command. We need the \ to separate each argument otherwise qemu gets confused. Customize as desired.
 qemu-kvm \
      -kernel $KERNEL_PATH \
