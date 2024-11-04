@@ -1,9 +1,9 @@
 #! /bin/bash
 
-TREE=master
+SHA=master
 NUM_COMMITS=0
-ARGUMENTS="bzImage"
-BUILD_DIR="compiled/"
+FILES="bzImage"
+BUILD_DIR="$HOME/kernel/compiled/"
 COMPILER="ccache gcc"
 ARCH="x86_64"
 THREADS="8"
@@ -11,38 +11,60 @@ THREADS="8"
 # We don't care about ccache for other systems b/c not building frequently
 # enough
 
-#parse more complicated make command, default is above
-#Arguements:
-#1 - files to make, bzImage to cmdline if unsure
-#2 - compiler, gcc if unsure (without ARCH might be weird)
-#3 - ARCH, x86_64 if unsure
-if [ $# -gt 0 ];
-then
-	NUM_COMMITS=$1
-fi
-if [ $# -gt 1 ];
-then
-	ARGUMENTS=$2
-fi
-if [ $# -gt 2 ];
-then
-	COMPILER=$3
-fi
-if [ $# -gt 3 ];
-then
-	ARCH=$4
-fi
+#parse more complicated make command. Expected input is "-{opt}"
+#default is above Arguements. Below is all options available:
 
-COMMAND="make -s -j$THREADS O=$BUILD_DIR $ARGUMENTS CC='$COMPILER' ARCH=$ARCH"
-printf "Files: $ARGUMENTS\n$COMMAND\n"
-#This compiles ALL commits from TREE~NUM_COMMITS, printing out ONLY errors
-#To access a specific commit for debugging, simply checkout TREE~NUM
+#a - ARCH, x86_64 if unsure
+#c - compiler, gcc if unsure (without ARCH might be weird)
+#f - files to make, bzImage to cmdline if unsure
+#n - number of commits to build backwards
+#o - output directory, appended onto "$HOME/kernel"
+#s - SHA/Branch to pull from git repo - pulled commit is the first one built
+#t - number of threads
+
+OPTSTRING="a:c:f:n:o:s:t:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		a)
+			ARCH=${OPTARG}
+			;;
+		c)
+			COMPILER=${OPTARG}
+			;;
+		f)
+			FILES=${OPTARG}
+			;;
+		n)
+			NUM_COMMITS=${OPTARG}
+			;;
+		o)
+			BUILD_DIR="$HOME/kernel/${OPTARG}/"
+			;;
+		s)
+			SHA=${OPTARG}
+			;;
+		t)
+			THREADS=${OPTARG}
+			;;
+		h)
+			printf "a : ARCH\nc : COMPILER\nf : FILES\nn : NUM_COMMITS\no : BUILD_DIR\ns : SHA or Branch\nt : NUM_THREADS\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+COMMAND="make -s -j$THREADS O=$BUILD_DIR $FILES CC='$COMPILER' ARCH=$ARCH"
+printf "Files: $FILES\n$COMMAND\n"
+#This compiles ALL commits from SHA~NUM_COMMITS, printing out ONLY errors
+#To access a specific commit for debugging, simply checkout SHA~NUM
 
 #This WILL NOT work with if there are changes to your present working directory.
 #Either commit/discard them, or look at the simpler build script.
 
 echo "building for commit: 0"
-git checkout $TREE -q
+git checkout $SHA -q
 git log --oneline -1
 eval $COMMAND
 
@@ -53,4 +75,4 @@ do
 	git log --oneline -1
 	eval $COMMAND
 done
-git checkout $TREE -q
+git checkout $SHA -q

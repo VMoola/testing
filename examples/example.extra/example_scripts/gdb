@@ -1,12 +1,44 @@
 #! /bin/bash
-BUILD_DIR="compiled/"
+SOURCE_DIR="$HOME/kernel/compiled/"
 KERNEL="vmlinux"
-MODULES_DIR="/root/testing/mkosi.extra/modules"
+MODULES_DIR="$HOME/testing/mkosi.extra/dev_modules"
+COMMAND=""
+
+#Options:
+#k - Kernel name (relative to SOURCE_DIR)
+#m - module location (relative to $HOME)
+#s - Source Directory (can generally be thought of as the kernel build dir)
+#    relative to ($HOME/kernel)
+
+OPTSTRING="k:m:s:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		k)
+			KERNEL=${OPTARG}
+			;;
+		m)
+			MODULES_DIR="$HOME/${OPTARG}/"
+			;;
+		s)
+			SOURCE_DIR="$HOME/kernel/${OPTARG}/"
+			;;
+		h)
+			printf "k : KERNEL\nm : MODULES_DIR\ns : SOURCE_DIR\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+echo $KERNEL
 
 #MAKE SURE that we have /[USER]/.config/gdb/gdbinit
-#with add-auto-load-safe-path /root/kernel/
-gdb \
-	-s "$BUILD_DIR$KERNEL" -q \
-	-ex "target remote localhost:1234" \
-	-ex "lx-symbols $MODULES_DIR" \
-	-ex 'c'
+#with add-auto-load-safe-path /[safepath]
+COMMAND="gdb \
+	-s '$SOURCE_DIR$KERNEL' -q \
+	-ex 'target remote localhost:1234' \
+	-ex 'lx-symbols $MODULES_DIR' \
+	-ex 'c'"
+echo $COMMAND
+eval $COMMAND

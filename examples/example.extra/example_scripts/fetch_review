@@ -2,22 +2,37 @@
 
 TYPE="mbox" #default is respondable mailbox, for application pass in "am"
 SRC=
-DST=$PWD
+OUTPUT_DIR="$PWD/"
 
-if [ $# -gt 0 ];
-then
-	SRC=$1
-fi
-if [ $# -gt 1 ];
-then
-	DST="$DST/$2"
-fi
-if [ $# -gt 2 ];
-then
-	TYPE=$3
-fi
+#parse more complicated command. Expected input is "-{opt}"
+#default is above Arguements. Below is all options available:
+#o - output directory, relative to $HOME
+#s - source mailbox link
+#t - type : typically "mbox" for mail, or "am" for applicable patches
 
-COMMAND="b4 $TYPE $SRC -o $DST"
+OPTSTRING="o:s:t:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		o)
+			OUTPUT_DIR="$HOME/${OPTARG}/"
+			;;
+		s)
+			SRC="${OPTARG}"
+			;;
+		t)
+			TYPE=${OPTARG}
+			;;
+		h)
+			printf "o : OUTPUT_DIR\ns : SOURCE\nt : TYPE\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+#This WILL fail if no SRC is provided with the -s option
+COMMAND="b4 $TYPE $SRC -o $OUTPUT_DIR"
 
 echo $COMMAND
 eval $COMMAND

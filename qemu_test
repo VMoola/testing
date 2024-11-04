@@ -1,19 +1,51 @@
 #! /bin/bash
 #
-KERNEL_PATH="$HOME/kernel/compiled/arch/x86_64/boot/bzImage"
+ARCH="x86_64"
+KERNEL_PATH="$HOME/kernel/compiled/arch/$ARCH/boot/bzImage"
 BOOT_FILE="image.raw"
 MEMORY="1G"
 MONITOR="vc"
 DISPLAY="curses"
+COMMAND=""
+
+#parse more complicated command. Expected input is "-{opt}"
+#default is above Arguements. Below is all the options available:
+#a - ARCH - MUST come before "-k"
+#k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
+#K - Path to kernel (absolute path)
+
+OPTSTRING="a:k:K:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		a)
+			ARCH=${OPTARG}
+			;;
+		k)
+			KERNEL_PATH="$HOME/kernel/${OPTARG}/arch/$ARCH/boot/bzImage"
+			;;
+		K)
+			KERNEL_PATH=${OPTARG}
+			;;
+		h)
+			printf "a : ARCH\nk : Kernel BUILD_DIR\nK : absolute Kernel path\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
 #Simple qemu command. We need the \ to separate each argument otherwise qemu gets confused. Customize as desired.
-qemu-kvm \
+COMMAND="qemu-kvm \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
-     -append "root=/dev/sda1 rw rootfstype=ext4 console=ttSy0 nokaslr" \
+     -append 'root=/dev/sda1 rw rootfstype=ext4 console=ttSy0 nokaslr' \
      -m $MEMORY \
      -s \
      -monitor $MONITOR \
      -display $DISPLAY \
      -smp cores=4 \
-     -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0 #for getting access to files, anything in the path directory will work
+     -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0" #for getting access to files, anything in the path directory will work
 #    -machine accel=kvm (this can be used if kvm hardware acceleration is supported)
+echo $COMMAND
+eval $COMMAND

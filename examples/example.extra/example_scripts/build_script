@@ -1,28 +1,50 @@
 #! /bin/bash
-ARGUMENTS="bzImage"
-BUILD_DIR="compiled/"
+FILES="bzImage"
+BUILD_DIR="$HOME/kernel/compiled/"
 COMPILER="ccache gcc"
 ARCH="x86_64"
 THREADS="8"
+COMMAND=""
 # i.e. building a full kernel, using ccache for the x86 compiler
 # We don't care about ccache for other systems b/c not building frequently
 # enough
 
-#parse more complicated make command, default is above
-#Arguements:
-#1 - files to make, bzImage to cmdline if unsure
-#2 - compiler, gcc if unsure (without ARCH might be weird)
-#3 - ARCH, x86_64 if unsure
-if [ $# -gt 0 ];
-then
-	ARGUMENTS=$1
-fi
-if [ $# -gt 1 ];
-then
-	COMPILER=$2
-fi
-if [ $# -gt 2 ];
-then
-	ARCH=$3
-fi
-make -j$THREADS O=$BUILD_DIR $ARGUMENTS CC="$COMPILER" ARCH=$ARCH
+#parse more complicated make command. Expected input is "-{opt}"
+#default is above Arguements. Below is all options available:
+
+#a - ARCH, x86_64 if unsure
+#c - compiler, gcc if unsure (without ARCH might be weird)
+#f - files to make, bzImage to cmdline if unsure
+#o - output directory, appended onto "$HOME/kernel"
+#t - number of threads
+
+OPTSTRING="a:c:f:o:t:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		a)
+			ARCH=${OPTARG}
+			;;
+		c)
+			COMPILER=${OPTARG}
+			;;
+		f)
+			FILES=${OPTARG}
+			;;
+		o)
+			BUILD_DIR="$HOME/kernel/${OPTARG}/"
+			;;
+		t)
+			THREADS=${OPTARG}
+			;;
+		h)
+			printf "a : ARCH\nc : COMPILER\nf : FILES\no : BUILD_DIR\nt : NUM_THREADS\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+COMMAND="make -j$THREADS O=$BUILD_DIR $FILES CC='$COMPILER' ARCH=$ARCH"
+echo $COMMAND
+eval $COMMAND
