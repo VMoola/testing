@@ -1,0 +1,27 @@
+#! /bin/bash
+CONFIG="~/.gitconfig_gmail"
+OPTSTRING="c:C:d:h"
+DEST="~/.gitconfig"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		c)
+			CONFIG="~/.gitconfig_${OPTARG}"
+			;;
+		C)
+			CONFIG=${OPTARG}
+			;;
+		D)
+			DEST=${OPTARG}
+			;;
+		h)
+			printf "c : CONFIG\nC : CONFIG_PATH\nd : DEST_PATH\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+COMMAND="cp ${CONFIG} ${DEST}"
+echo $COMMAND
+eval $COMMAND
