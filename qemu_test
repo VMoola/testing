@@ -6,20 +6,29 @@ BOOT_FILE="image.raw"
 MEMORY="1G"
 MONITOR="vc"
 DISPLAY="curses"
+EXTRA="mkosi.extra"
 COMMAND=""
 
 #parse more complicated command. Expected input is "-{opt}"
 #default is above Arguements. Below is all the options available:
 #a - ARCH - MUST come before "-k"
+#b - BOOT_FILE - Path to boot for the kernel to run (absolute path)
+#e - EXTRA - Path to directory for attaching (absolute path) - must be mounted
 #k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
 #K - Path to kernel (absolute path)
 
-OPTSTRING="a:k:K:h"
+OPTSTRING="a:b:e:k:K:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
 		a)
 			ARCH=${OPTARG}
+			;;
+		b)
+			BOOT_FILE=${OPTARG}
+			;;
+		e)
+			EXTRA=${OPTARG}
 			;;
 		k)
 			KERNEL_PATH="$HOME/kernel/${OPTARG}/arch/$ARCH/boot/bzImage"
@@ -28,7 +37,7 @@ while getopts ${OPTSTRING} opt; do
 			KERNEL_PATH=${OPTARG}
 			;;
 		h)
-			printf "a : ARCH\nk : Kernel BUILD_DIR\nK : absolute Kernel path\n"
+			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\n k : Kernel BUILD_DIR\nK : absolute Kernel path\n"
 			echo "See file for more details"
 			exit
 			;;
@@ -45,7 +54,7 @@ COMMAND="qemu-kvm \
      -monitor $MONITOR \
      -display $DISPLAY \
      -smp cores=4 \
-     -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0" #for getting access to files, anything in the path directory will work
+     -virtfs local,path=$EXTRA,mount_tag=host0,security_model=passthrough,id=host0" #for getting access to files, anything in the path directory will work
 #    -machine accel=kvm (this can be used if kvm hardware acceleration is supported)
 echo $COMMAND
 eval $COMMAND
