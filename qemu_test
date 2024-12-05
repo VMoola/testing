@@ -7,6 +7,7 @@ MEMORY="1G"
 MONITOR="vc"
 DISPLAY="curses"
 EXTRA="mkosi.extra"
+BOOT_PARAMS="nokaslr"
 COMMAND=""
 
 #parse more complicated command. Expected input is "-{opt}"
@@ -14,10 +15,11 @@ COMMAND=""
 #a - ARCH - MUST come before "-k"
 #b - BOOT_FILE - Path to boot for the kernel to run (absolute path)
 #e - EXTRA - Path to directory for attaching (absolute path) - must be mounted
+#p - BOOT_PARAMS - Early boot params (if list, must be surrounded by "")
 #k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
 #K - Path to kernel (absolute path)
 
-OPTSTRING="a:b:e:k:K:h"
+OPTSTRING="a:b:e:p:k:K:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -30,6 +32,9 @@ while getopts ${OPTSTRING} opt; do
 		e)
 			EXTRA=${OPTARG}
 			;;
+		p)
+			BOOT_PARAMS=${OPTARG}
+			;;
 		k)
 			KERNEL_PATH="$HOME/kernel/${OPTARG}/arch/$ARCH/boot/bzImage"
 			;;
@@ -37,7 +42,7 @@ while getopts ${OPTSTRING} opt; do
 			KERNEL_PATH=${OPTARG}
 			;;
 		h)
-			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\n k : Kernel BUILD_DIR\nK : absolute Kernel path\n"
+			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\n"
 			echo "See file for more details"
 			exit
 			;;
@@ -48,7 +53,7 @@ done
 COMMAND="qemu-kvm \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
-     -append 'root=/dev/sda1 rw rootfstype=ext4 console=ttSy0 nokaslr' \
+     -append 'root=/dev/sda1 rw rootfstype=ext4 console=ttSy0 $BOOT_PARAMS' \
      -m $MEMORY \
      -s \
      -monitor $MONITOR \
