@@ -5,6 +5,7 @@ KERNEL_PATH="$HOME/kernel/compiled/arch/$ARCH/boot/bzImage"
 BOOT_FILE="image.raw"
 ROOTFS="ext4"
 MEMORY="1G"
+CPUS="1"
 MONITOR="vc"
 DISPLAY="curses"
 EXTRA="mkosi.extra"
@@ -20,8 +21,9 @@ COMMAND=""
 #k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
 #K - Path to kernel (absolute path)
 #r - Root filesystem type to mount
+#c - Number of cpu cores
 
-OPTSTRING="a:b:e:p:k:K:r:h"
+OPTSTRING="a:b:e:p:k:K:r:c:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -46,8 +48,11 @@ while getopts ${OPTSTRING} opt; do
 		r)
 			ROOTFS=${OPTARG}
 			;;
+		c)
+			CPUS=${OPTARG}
+			;;
 		h)
-			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\n"
+			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nc : CPUS\n"
 			echo "See file for more details"
 			exit
 			;;
@@ -63,7 +68,7 @@ COMMAND="qemu-kvm \
      -s \
      -monitor $MONITOR \
      -display $DISPLAY \
-     -smp cores=4 \
+     -smp cores=$CPUS \
      -virtfs local,path=$EXTRA,mount_tag=host0,security_model=passthrough,id=host0" #for getting access to files, anything in the path directory will work
 #    -machine accel=kvm (this can be used if kvm hardware acceleration is supported)
 echo $COMMAND
