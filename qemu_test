@@ -22,8 +22,9 @@ COMMAND=""
 #K - Path to kernel (absolute path)
 #r - Root filesystem type to mount
 #c - Number of cpu cores
+#m - RAM provided
 
-OPTSTRING="a:b:e:p:k:K:r:c:h"
+OPTSTRING="a:b:e:p:k:K:r:c:m:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -51,8 +52,11 @@ while getopts ${OPTSTRING} opt; do
 		c)
 			CPUS=${OPTARG}
 			;;
+		m)
+			MEMORY=${OPTARG}
+			;;
 		h)
-			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nc : CPUS\n"
+			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nc : CPUS\nm : MEMORY\n"
 			echo "See file for more details"
 			exit
 			;;
