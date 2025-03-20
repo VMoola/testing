@@ -76,6 +76,7 @@ COMMAND="qemu-kvm \
      -smp cores=$CPUS \
      -object memory-backend-ram,size=$MEMORY,id=m$NUMA_ID \
      -numa node,cpus=0-$((CPUS - 1)),nodeid=$NUMA_ID,memdev=m$NUMA_ID \
+     -net nic -net user,hostfwd=tcp::10022-:22 \
      -virtfs local,path=$EXTRA,mount_tag=host0,security_model=passthrough,id=host0" #for getting access to files, anything in the path directory will work
 #    -machine accel=kvm (this can be used if kvm hardware acceleration is supported)
 

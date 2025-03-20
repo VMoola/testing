@@ -1,0 +1,6 @@
+#! /bin/bash
+# This is paired with the ssh networking in QEMU
+#1 - log onto the guest
+#2 - mount the shared directory
+#3 - run the "example_ssh_setup" script
+ssh root@localhost -p10022 -o StrictHostKeyChecking=no
