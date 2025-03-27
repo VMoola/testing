@@ -10,7 +10,7 @@ NUMA_ID="0"
 MONITOR="vc"
 DISPLAY="curses"
 EXTRA="mkosi.extra"
-BOOT_PARAMS="nokaslr"
+BOOT_PARAMS="nokaslr printk.synchronous=1"
 COMMAND=""
 
 #parse more complicated command. Expected input is "-{opt}"
