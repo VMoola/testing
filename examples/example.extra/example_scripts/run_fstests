@@ -1,0 +1,73 @@
+#! /bin/bash
+TEST_SCRIPT_DIR="xfstests" #must be fstests build directory (relative to current directory)
+#setup basic devices
+
+TEST_FS="ext4"
+TEST_DIR="generic"
+TESTCASES="*"
+
+#parse more complicated make command. Expected input is "-{opt}"
+#default is above Arguements. Below is all options available:
+
+#f - Filesystem to mount and test
+#t - Testing directory (i.e. generic)
+#n - Testcase number (i.e. 00[1-3] is 00[1,2,3] which is this first 3 test cases)
+
+OPTSTRING="f:t:n:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		f)
+			TEST_FS=${OPTARG}
+			;;
+		t)
+			TEST_DIR=${OPTARG}
+			;;
+		n)
+			TESTCASES=${OPTARG}
+			;;
+		h)
+			printf "f : Filesystem to test\nt : Testcase folder (i.e. generic)\nn : Testcase number\n"
+			echo "See file for more details"
+			echo "Testing output will be found in $TEST_SCRIPT_DIR/results/ (.bad are failed tests)"
+			exit
+			;;
+	esac
+done
+
+
+if [ $# -eq 0 ];
+then
+	echo "Running default installed fstests"
+fi
+
+echo "Filesystem: $TEST_FS"
+
+fallocate $TEST_SCRIPT_DIR/test.img -l 5G
+fallocate $TEST_SCRIPT_DIR/scratch.img -l 5G
+
+mkfs.$TEST_FS $TEST_SCRIPT_DIR/test.img
+
+losetup /dev/loop0 $TEST_SCRIPT_DIR/test.img
+losetup /dev/loop1 $TEST_SCRIPT_DIR/scratch.img
+
+
+mkdir -p /mnt/test && mount /dev/loop0 /mnt/test
+mkdir -p /mnt/scratch
+
+cd $TEST_SCRIPT_DIR
+
+#If we haven't put our desired config in local.config or the global environment variables
+#we will fail here
+
+./check "$TEST_DIR/$TESTCASES"
+
+#cleanup everything we setup earlier
+
+cd ..
+
+losetup -d /dev/loop0
+losetup -d /dev/loop1
+
+rm $TEST_SCRIPT_DIR/test.img
+rm $TEST_SCRIPT_DIR/scratch.img
