@@ -12,6 +12,7 @@ DISPLAY="curses"
 EXTRA="mkosi.extra"
 BOOT_PARAMS="nokaslr printk.synchronous=1"
 COMMAND=""
+QEMU="qemu-kvm"
 
 #parse more complicated command. Expected input is "-{opt}"
 #default is above Arguements. Below is all the options available:
@@ -21,11 +22,13 @@ COMMAND=""
 #p - BOOT_PARAMS - Early boot params (if list, must be surrounded by "")
 #k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
 #K - Path to kernel (absolute path)
+#q - Override qemu-kvm with qemu for the given arch
+#Q - Overrited qemu command with this command
 #r - Root filesystem type to mount
 #c - Number of cpu cores
 #m - RAM provided
 
-OPTSTRING="a:b:e:p:k:K:r:c:m:h"
+OPTSTRING="a:b:e:p:k:K:q:Q:r:c:m:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -50,6 +53,12 @@ while getopts ${OPTSTRING} opt; do
 		r)
 			ROOTFS=${OPTARG}
 			;;
+		q)
+			QEMU="qemu-system-${ARCH}"
+			;;
+		Q)
+			QEMU=${OPTARG}
+			;;
 		c)
 			CPUS=${OPTARG}
 			;;
@@ -65,7 +74,7 @@ while getopts ${OPTSTRING} opt; do
 done
 
 #Simple qemu command. We need the \ to separate each argument otherwise qemu gets confused. Customize as desired.
-COMMAND="qemu-kvm \
+COMMAND="$QEMU \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE \
      -append 'root=/dev/sda1 rw rootfstype=$ROOTFS console=ttSy0 $BOOT_PARAMS' \
