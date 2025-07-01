@@ -19,3 +19,12 @@ copy those and use the iso to install (see the QEMU m68k documentation).
 Using a specific machine type makes things easier (debian default is q800).
 q800 has a limitation of 1000M!
 Display=curses & monitor=vc DOESN'T work (default works though)
+
+## Misc
+
+We can configure dract and use "dracut <output_file>" to generate an
+initrd for qemu's parameter if we want to preload modules for the kernel
+to have access to. Just pass "initrd=<dracut_file>" to qemu as well.
+
+Dracut can be used to make Unified Kernel Images and is versatile.
+Unfortunately, it is very heavyweight and I haven't figured it out yet.

@@ -10,8 +10,9 @@ make autotools
 make
 make install
 ```
-
 Now you can navigate to /opt/ltp to run the tests.
+
+Take a look at the command found in the example scripts folder ```run_ltp -h```.
 
 # For smaller projects
 If we don't want to do a FULL test suite every time, we can simply
