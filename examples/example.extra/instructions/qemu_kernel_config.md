@@ -12,6 +12,7 @@ DEBUG_INFO - debugging info for pahole
 DWARF_TOOLCHAIN and BTF - pahole for modifying structures
 MODULES_FORCE_UNLOAD - for unloading test modules even if kernel is unsafe
 GDB_SCRIPTS - debugging symbols for gdb (must run "make scripts_gdb")
+*_SELFTESTS - enables selftest support for that feature
 ```
 "make debug.config" is good for thorough intensive testing, just sometimes
 bigger/more excessive than necessary.
