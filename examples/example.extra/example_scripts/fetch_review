@@ -6,7 +6,7 @@ OUTPUT_DIR="$PWD/"
 
 #parse more complicated command. Expected input is "-{opt}"
 #default is above Arguements. Below is all options available:
-#o - output directory, relative to $HOME
+#o - output directory, appended onto $HOME/review/
 #s - source mailbox link
 #t - type : typically "mbox" for mail, or "am" for applicable patches
 
@@ -15,7 +15,7 @@ OPTSTRING="o:s:t:h"
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
 		o)
-			OUTPUT_DIR="$HOME/${OPTARG}/"
+			OUTPUT_DIR="$HOME/review/${OPTARG}/"
 			;;
 		s)
 			SRC="${OPTARG}"
@@ -34,5 +34,7 @@ done
 #This WILL fail if no SRC is provided with the -s option
 COMMAND="b4 $TYPE $SRC -o $OUTPUT_DIR"
 
+#Make the output directory if it does not exist first
+mkdir $OUTPUT_DIR
 echo $COMMAND
 eval $COMMAND
