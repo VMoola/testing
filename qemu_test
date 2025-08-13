@@ -7,6 +7,7 @@ ROOTFS="ext4"
 MEMORY="1G"
 CPUS="1"
 NUMA_ID="0"
+SERIAL="none"
 MONITOR="vc"
 DISPLAY="curses"
 EXTRA="mkosi.extra"
@@ -80,6 +81,7 @@ COMMAND="$QEMU \
      -append 'root=/dev/sda1 rw rootfstype=$ROOTFS console=ttSy0 $BOOT_PARAMS' \
      -m $MEMORY \
      -s \
+     -serial $SERIAL \
      -monitor $MONITOR \
      -display $DISPLAY \
      -smp cores=$CPUS \
