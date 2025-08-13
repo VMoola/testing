@@ -28,8 +28,11 @@ QEMU="qemu-kvm"
 #r - Root filesystem type to mount
 #c - Number of cpu cores
 #m - RAM provided
+#d - Display type (usually none, curses, or gtk - See QEMU man page)
+#M - Monitor type (usually none, vc, or stdio - See QEMU man page)
+#s - Serial type (usually none, vc, or stdio - See QEMU man page)
 
-OPTSTRING="a:b:e:p:k:K:q:Q:r:c:m:h"
+OPTSTRING="a:b:e:p:k:K:q:Q:r:c:m:d:M:s:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -66,8 +69,17 @@ while getopts ${OPTSTRING} opt; do
 		m)
 			MEMORY=${OPTARG}
 			;;
+		d)
+			DISPLAY=${OPTARG}
+			;;
+		M)
+			MONITOR=${OPTARG}
+			;;
+		s)
+			SERIAL=${OPTARG}
+			;;
 		h)
-			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nc : CPUS\nm : MEMORY\n"
+			printf "a : ARCH\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nc : CPUS\nm : MEMORY\nd : DISPLAY type\nM : MONITOR type\ns : SERIAL device\n"
 			echo "See file for more details"
 			exit
 			;;
