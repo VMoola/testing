@@ -18,7 +18,6 @@ bigger/more excessive than necessary.
 # QEMU Controls
 
 To change between the qemu window and qemu monitor, use "ALT + {1,2}".
-For syzbot kernels, pass in "-serial stdio" then ssh in.
 
 # Debugging Userspace
 
