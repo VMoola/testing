@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <errno.h>
 
 int main()
 {
@@ -17,8 +18,9 @@ int main()
 	ftruncate(fd, len);
 	char txt[] = "example";
 	char *x = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	if (!x) {
-		printf("mmap dead");
+
+	if (x == MAP_FAILED) {
+		printf("mmap dead, %s", strerror(errno));
 		return -1;
 	}
 
