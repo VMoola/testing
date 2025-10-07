@@ -78,6 +78,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_enum,
 			unsigned long args)
 {
 	//since args is a pointer, we can cast to what we expect
+	//we only need copy_{to,from}_user when we are getting a pointer
 	printk("ioctl triggered, cmd number %d args %s\n", ioctl_enum, (char *)args);
 
 	//see lookup_fd... to get a struct file given a file descriptor
