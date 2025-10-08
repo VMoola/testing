@@ -16,3 +16,7 @@ Then look at the files for examples:
 modules_example/device.c
 example_scripts/device_example.c
 ```
+
+When dealing with device ioctls, we can simply find a value that is NOT being
+used already. This becomes undefined behavior if we try to override one, so
+make sure to check.
