@@ -1,0 +1,48 @@
+#! /bin/bash
+
+# This script should be used to copy the simplest minimalistic set of files
+# required to boot the kernel, as well as build modules for it. It is
+# expected to be used to generate a completely fresh directory from the
+# build directory.
+
+SRC="$HOME/kernel/compiled"
+DEST="$HOME/kernel/barebones"
+OPTSTRING="k:d:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		k)
+			SRC="$HOME/kernel/${OPTARG}"
+			;;
+		d)
+			DEST=${OPTARG}
+			;;
+		h)
+			printf "s : SOURCE KERNEL\nd : DEST_PATH\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+# We want to be careful not to overwrite any files, so
+# exit the script if we fail to make our directory
+mkdir $DEST || exit
+
+# It is expected that all these files/directories are present in the build
+
+declare -a FILES=("Makefile" "vmlinux" "Module.symvers")
+declare -a DIRS=("arch" "scripts" "tools")
+for i in ${FILES[@]}
+do
+	COMMAND="cp ${SRC}/${i} ${DEST}/${i}"
+	echo $COMMAND
+	eval $COMMAND
+done
+
+for i in ${DIRS[@]}
+do
+	COMMAND="cp -r ${SRC}/${i} ${DEST}/${i}"
+	echo $COMMAND
+	eval $COMMAND
+done
