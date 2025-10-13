@@ -11,7 +11,7 @@ while getopts ${OPTSTRING} opt; do
 		C)
 			CONFIG=${OPTARG}
 			;;
-		D)
+		d)
 			DEST=${OPTARG}
 			;;
 		h)
