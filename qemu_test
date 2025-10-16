@@ -21,7 +21,7 @@ QEMU="qemu-kvm"
 #b - BOOT_FILE - Path to boot for the kernel to run (absolute path)
 #e - EXTRA - Path to directory for attaching (absolute path) - must be mounted
 #p - BOOT_PARAMS - Early boot params (if list, must be surrounded by "")
-#k - Path to kernel (relative to expected $HOME/kernel/[]/arch/[]/boot/bzImage)
+#k - Path to kernel (build directory)
 #K - Path to kernel (absolute path)
 #q - Override qemu-kvm with qemu for the given arch
 #Q - Overrited qemu command with this command
@@ -49,7 +49,7 @@ while getopts ${OPTSTRING} opt; do
 			BOOT_PARAMS=${OPTARG}
 			;;
 		k)
-			KERNEL_PATH="$HOME/kernel/${OPTARG}/arch/$ARCH/boot/bzImage"
+			KERNEL_PATH="${OPTARG}/arch/$ARCH/boot/bzImage"
 			;;
 		K)
 			KERNEL_PATH=${OPTARG}
