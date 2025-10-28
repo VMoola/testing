@@ -34,7 +34,6 @@ echo $KERNEL
 COMMAND="gdb \
 	'$KERNEL' -q -tui \
 	-ex 'target remote localhost:1234' \
-	-ex 'lx-symbols $MODULES_DIR' \
 	-ex 'c'"
 echo $COMMAND
 eval $COMMAND
