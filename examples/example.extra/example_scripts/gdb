@@ -32,7 +32,7 @@ echo $KERNEL
 #MAKE SURE that we have /[USER]/.config/gdb/gdbinit
 #with add-auto-load-safe-path /[safepath]
 COMMAND="gdb \
-	-s '$KERNEL' -q \
+	'$KERNEL' -q -tui \
 	-ex 'target remote localhost:1234' \
 	-ex 'lx-symbols $MODULES_DIR' \
 	-ex 'c'"
