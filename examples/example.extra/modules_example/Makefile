@@ -21,6 +21,9 @@ obj-m += $(FILENAME).o
 PWD := $(CURDIR)
 TARGET := $(HOME)/testing/$(D)/$(FILENAME)
 
+export KBUILD_EXTMOD = $(PWD)
+export KBUILD_EXTMOD_OUTPUT = $(PWD)
+
 all:
 	make -C $(HOME)/kernel/$(K) M=$(PWD) modules
 	#copy file to shared mount for easy insertion in QEMU
