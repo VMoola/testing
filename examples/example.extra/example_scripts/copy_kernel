@@ -12,7 +12,7 @@ OPTSTRING="k:d:h"
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
 		k)
-			SRC="$HOME/kernel/${OPTARG}"
+			SRC=${OPTARG}
 			;;
 		d)
 			DEST=${OPTARG}
