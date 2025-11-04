@@ -15,6 +15,10 @@ Then look at the files for examples:
 ```
 modules_example/device.c
 example_scripts/device_example.c
+
+# It also makes sense to disable CONFIG_LOCALVERSION_AUTO when building the
+# kernel. Doing so streamlines the process by providing meaningful details
+# about whether we need to recompile the kernel, module, or Module.Symvers.
 ```
 
 When dealing with device ioctls, we can simply find a value that is NOT being
