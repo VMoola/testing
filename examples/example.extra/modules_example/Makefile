@@ -5,8 +5,8 @@
 #	relative to $(HOME)/testing/
 
 FILENAME = hello
-K = compiled
-D = mkosi.extra/modules
+K = $(HOME)/kernel/compiled
+D = $(HOME)/testing/mkosi.extra/modules
 #can be overwritten through the command line "FILENAME=modname"
 
 obj-m += $(FILENAME).o
@@ -19,18 +19,18 @@ obj-m += $(FILENAME).o
 #it's likely better to write a script so its all cleanly
 #moved to the shared mount directory, or modify the cp command below
 PWD := $(CURDIR)
-TARGET := $(HOME)/testing/$(D)/$(FILENAME)
+TARGET := $(D)/$(FILENAME)
 
 export KBUILD_EXTMOD = $(PWD)
 export KBUILD_EXTMOD_OUTPUT = $(PWD)
 
 all:
-	make -C $(HOME)/kernel/$(K) M=$(PWD) modules
+	make -C $(K) M=$(PWD) modules
 	#copy file to shared mount for easy insertion in QEMU
 	cp $(FILENAME).ko $(TARGET).ko
 
 clean:
-	make -C $(HOME)/kernel/$(K) M=$(PWD) clean
+	make -C $(K) M=$(PWD) clean
 	rm $(TARGET).ko
 
 help:
