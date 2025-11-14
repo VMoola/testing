@@ -10,6 +10,9 @@ cp [mounted_shared_dir]/xfstests-dev xfstests
 cd xfstests
 make
 make install
+
+//Then place a config in the directory - see example_fstest_local.config
+cp [config]/xfstests/local.config
 ```
 Take a look at the command found in the example scripts folder ```run_fstests -h```.
 
