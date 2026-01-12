@@ -1,0 +1,28 @@
+#! /bin/bash
+USER=vishalmoola
+SHARED_PATH=image
+DEVICE=$(losetup -f)
+MOUNT_PARTITION="${DEVICE}p1"
+VMUSER="root"
+mkdir -p $SHARED_PATH
+
+sudo losetup -P $DEVICE image.raw
+sudo mount $MOUNT_PARTITION $SHARED_PATH
+echo "Wait for Ownership"
+
+# Tweak the permissions so we can conveniently modify them.
+# This is not necessary, and assumes the guest has complete and
+# free root access.
+sudo chown -R $USER $SHARED_PATH
+
+echo "Mounted image. Modify as desired"
+#Wait for user to prompt for completion
+read -p "New line when done"
+
+# This first line is necessary to reset the vm state, otherwise
+# sudo will break. With minor tweaks to the SHARED_PATH var, one
+# can easily mitigate the effects of this as a precaution.
+sudo chown -R $VMUSER $SHARED_PATH
+
+sudo umount $MOUNT_PARTITION
+sudo losetup -d $DEVICE
