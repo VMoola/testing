@@ -24,3 +24,16 @@ example_scripts/device_example.c
 When dealing with device ioctls, we can simply find a value that is NOT being
 used already. This becomes undefined behavior if we try to override one, so
 make sure to check.
+
+# Installing
+
+```
+To install our module, we have a few steps:
+1) mount the image
+2) make modules_install INSTALL_MOD_PATH=[mounted_image]
+3) cp [module_path].ko [mounted_image]/lib/modules/[version]/extra/[module].ko
+4) depmod inside the vm
+
+// Optional - for automatically loading module on subsequent boots:
+5) add [module_name] to any file in /etc/modprobe.d/[file].conf
+```
