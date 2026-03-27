@@ -18,6 +18,7 @@ bigger/more excessive than necessary.
 # QEMU Controls
 
 To change between the qemu window and qemu monitor, use "ALT + {1,2}".
+We can shutdown qemu using the ```poweroff``` command.
 
 # Debugging Userspace
 
