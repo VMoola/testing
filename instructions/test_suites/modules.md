@@ -29,10 +29,11 @@ make sure to check.
 
 ```
 To install our module, we have a few steps:
-1) mount the image
+1) mount the image (we need the /usr/lib/modules directory)
 2) make modules_install INSTALL_MOD_PATH=[mounted_image]
 3) cp [module_path].ko [mounted_image]/lib/modules/[version]/extra/[module].ko
 4) depmod inside the vm
+5) modprobe [module]
 
 // Optional - for automatically loading module on subsequent boots:
 5) add [module_name] to any file in /etc/modprobe.d/[file].conf
