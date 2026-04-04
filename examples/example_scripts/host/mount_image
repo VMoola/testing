@@ -5,6 +5,36 @@ DESIRED_DIR=root
 DEVICE=$(losetup -f)
 MOUNT_PARTITION="${DEVICE}p1"
 VMUSER="root"
+
+# d - Desired sub-directory within the image
+# p - mounted image path
+# u - host user
+# v - guest user - THIS WILL BREAK NON-UNIFORM OWNERSHIP ON THE GUEST
+OPTSTRING="d:p:u:v:h"
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		d)
+			DESIRED_DIR=${OPTARG}
+			;;
+		p)
+			SHARED_PATH=${OPTARG}
+			;;
+		u)
+			USER=${OPTARG}
+			;;
+		v)
+			VMUSER=${OPTARG}
+			;;
+		h)
+			printf "d : Desired directory within the image\np : Mounted image path\nu : Host user\nv : VM user"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+
+
 mkdir -p $SHARED_PATH
 
 sudo losetup -P $DEVICE image.raw
@@ -14,6 +44,13 @@ echo "Wait for Ownership"
 # Tweak the permissions so we can conveniently modify them.
 # chown and chmod take a LONG time when used recursively on large
 # images. Consider overriding the corresponding variables.
+#
+# Note that in the case of precisely the /root directory, we must use sudo
+# for modifying the contents. This is because we do not have write access
+# to that directory. Attempting to change this from the host can result in
+# catastrophic filesystem issues for the guest, so don't do it. You might
+# as well make a new directory under / to utilize instead.
+
 sudo chown -R $USER $SHARED_PATH/$DESIRED_DIR
 
 echo "Mounted image. Modify as desired"
