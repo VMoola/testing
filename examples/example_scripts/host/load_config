@@ -1,0 +1,22 @@
+#! /bin/bash
+SCRIPT_NAME="$(basename "$0")"
+CONFIG_DIR=configs
+FALLBACK_DIR=examples/example_configs/script_configs
+CONFIG_ENDING=.conf
+
+CONFIG_PATH=$TESTING_REPO/$CONFIG_DIR/$SCRIPT_NAME$CONFIG_ENDING
+# Load config file if it exists
+if [ -f $CONFIG_PATH ]; then
+	printf "Config found for $SCRIPT_NAME at $CONFIG_PATH\n"
+else
+	printf "No Configuration File! Using defaults from examples/example_configs/script_configs/\n"
+	CONFIG_PATH=$TESTING_REPO/$FALLBACK_DIR/$SCRIPT_NAME$CONFIG_ENDING
+fi
+
+#Sanity check - we shouldn't fail if the repo is fresh
+if [ ! -f $CONFIG_PATH ]; then
+	printf "No Configuration found at the fallback. Please checkout the examples directory again"
+	exit
+fi
+
+source $CONFIG_PATH
