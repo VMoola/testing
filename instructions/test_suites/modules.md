@@ -36,5 +36,5 @@ To install our module, we have a few steps:
 5) modprobe [module]
 
 // Optional - for automatically loading module on subsequent boots:
-5) add [module_name] to any file in /etc/modprobe.d/[file].conf
+5) add [module_name] to any file in /etc/modules-load.d/[file].conf
 ```
