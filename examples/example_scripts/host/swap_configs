@@ -1,7 +1,9 @@
 #! /bin/bash
-CONFIG="~/.gitconfig_gmail"
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
 OPTSTRING="c:C:d:h"
-DEST="~/.gitconfig"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in

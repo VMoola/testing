@@ -1,4 +1,8 @@
 #! /bin/bash
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
 # This is paired with the ssh networking in QEMU
 #1 - log onto the guest
 #2 - mount the shared directory

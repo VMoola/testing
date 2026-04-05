@@ -1,8 +1,8 @@
 #! /bin/bash
 
-TYPE="mbox" #default is respondable mailbox, for application pass in "am"
-SRC=
-OUTPUT_DIR="$PWD/"
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
 
 #parse more complicated command. Expected input is "-{opt}"
 #default is above Arguements. Below is all options available:

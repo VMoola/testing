@@ -1,10 +1,7 @@
 #! /bin/bash
-USER=vishalmoola
-SHARED_PATH=image
-DESIRED_DIR=root
-DEVICE=$(losetup -f)
-MOUNT_PARTITION="${DEVICE}p1"
-VMUSER="root"
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
 
 # d - Desired sub-directory within the image
 # p - mounted image path

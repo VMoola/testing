@@ -1,10 +1,8 @@
 #! /bin/bash
-FILES="bzImage"
-BUILD_DIR="$HOME/kernel/compiled/"
-COMPILER="ccache gcc"
-ARCH="x86_64"
-THREADS="8"
-COMMAND=""
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
 # i.e. building a full kernel, using ccache for the x86 compiler
 # We don't care about ccache for other systems b/c not building frequently
 # enough

@@ -1,3 +1,7 @@
 #! /bin/bash
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
 cat ~/.ssh/id_rsa.pub >> image/root/.ssh/authorized_keys
 chmod 700 image/root/.ssh && chmod 600 image/root/.ssh/authorized_keys

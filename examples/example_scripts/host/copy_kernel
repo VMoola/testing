@@ -5,8 +5,10 @@
 # expected to be used to generate a completely fresh directory from the
 # build directory.
 
-SRC="$HOME/kernel/compiled"
-DEST="$HOME/kernel/barebones"
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
 OPTSTRING="k:d:h"
 
 while getopts ${OPTSTRING} opt; do

@@ -1,20 +1,7 @@
 #! /bin/bash
-#
-ARCH="x86_64"
-KERNEL_PATH="$HOME/kernel/compiled/arch/$ARCH/boot/bzImage"
-BOOT_FILE="image.raw"
-ROOTFS="ext4"
-MEMORY="1G"
-CPUS="1"
-NUMA_ID="0"
-SERIAL="none"
-MONITOR="vc"
-DISPLAY="curses"
-EXTRA="mkosi.extra"
-BOOT_PARAMS="nokaslr printk.synchronous=1"
-COMMAND=""
-QEMU="qemu-kvm"
-ACCEL="kvm -accel tcg"
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
 
 #parse more complicated command. Expected input is "-{opt}"
 #default is above Arguements. Below is all the options available:
