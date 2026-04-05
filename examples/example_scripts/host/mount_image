@@ -23,7 +23,7 @@ while getopts ${OPTSTRING} opt; do
 			VMUSER=${OPTARG}
 			;;
 		h)
-			printf "d : Desired directory within the image\np : Mounted image path\nu : Host user\nv : VM user"
+			printf "d : Desired directory within the image\np : Mounted image path\nu : Host user\nv : VM user\n"
 			echo "See file for more details"
 			exit
 			;;
