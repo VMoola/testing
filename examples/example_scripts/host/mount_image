@@ -5,9 +5,10 @@ source $TESTING_REPO/examples/example_scripts/host/load_config
 
 # d - Desired sub-directory within the image
 # p - mounted image path
+# s - source image containing the backing files
 # u - host user
 # v - guest user - THIS WILL BREAK NON-UNIFORM OWNERSHIP ON THE GUEST
-OPTSTRING="d:p:u:v:h"
+OPTSTRING="d:p:s:u:v:h"
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
 		d)
@@ -16,6 +17,9 @@ while getopts ${OPTSTRING} opt; do
 		p)
 			SHARED_PATH=${OPTARG}
 			;;
+		s)
+			SOURCE_IMG=${OPTARG}
+			;;
 		u)
 			USER=${OPTARG}
 			;;
@@ -23,7 +27,7 @@ while getopts ${OPTSTRING} opt; do
 			VMUSER=${OPTARG}
 			;;
 		h)
-			printf "d : Desired directory within the image\np : Mounted image path\nu : Host user\nv : VM user\n"
+			printf "d : Desired directory within the image\np : Mounted image path\ns : Source Image absolute path\nu : Host user\nv : VM user\n"
 			echo "See file for more details"
 			exit
 			;;
@@ -34,7 +38,14 @@ done
 
 mkdir -p $SHARED_PATH
 
-sudo losetup -P $DEVICE image.raw
+sudo losetup -P $DEVICE $SOURCE_IMG
+
+#prevent race condition
+udevadm settle	--exit-if-exists=$MOUNT_PARTITION
+
+if [ ! -b $MOUNT_PARTITION ]; then
+	MOUNT_PARTITION=$DEVICE
+fi
 sudo mount $MOUNT_PARTITION $SHARED_PATH
 echo "Wait for Ownership"
 
