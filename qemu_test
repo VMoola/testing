@@ -93,7 +93,7 @@ done
 COMMAND="$QEMU \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE,if=$INTERFACE \
-     -append 'root=$RPATH rw rootfstype=$ROOTFS console=ttSy0 $BOOT_PARAMS' \
+     -append 'root=$RPATH rw rootfstype=$ROOTFS console=ttyS0 $BOOT_PARAMS' \
      -accel $ACCEL \
      -m $MEMORY \
      -s \
