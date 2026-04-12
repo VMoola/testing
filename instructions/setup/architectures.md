@@ -3,11 +3,18 @@
 We need a cross-compiler and cross-emulator for different architectures.
 We will also need a different initrd/bootable-image for each architecture.
 
-losetup can be used for raw types, mount can be used for iso types.
+losetup should be used for images with partition tables, mount can be used
+directly for those without.
 
 # x86
 Here defconfig works.
 We get a BzImage located in kernel/arch/x86/boot/BzImage.
+
+For buildroot:
+To boot qemu, here are particular defaults:
+1) `append root=/dev/vda` instead of `/dev/sda1`
+2) Our input file must have the virtio interface `if=virtio`
+
 
 # m68k
 Here defconfig works.
