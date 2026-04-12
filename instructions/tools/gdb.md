@@ -11,6 +11,7 @@ GDB works after we've compiled a kernel, and from that source tree ran:
 
 # Useful commands
 
+```
 help [command] - shows details and usage about a command
 lx-dmesg
 bt (backtrace) - stack backtrace
@@ -20,3 +21,4 @@ info - show variable values
 s - step one line
 n - execute one line, will skip over functions
 p [var] - print variable (might need to dereference)
+```
