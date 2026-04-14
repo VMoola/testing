@@ -79,7 +79,7 @@ while getopts ${OPTSTRING} opt; do
 			INTERFACE=${OPTARG}
 			;;
 		h)
-			printf "a : ARCH\nA : Accelerator\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nR : Root path\nc : CPUS\nm : MEMORY\nd : DISPLAY type\nM : MONITOR type\ns : SERIAL device\ni : Interface\n"
+			printf "a : ARCH\nA : Accelerator\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nR : Root path\nq : Use qemu-system-ARCH\nQ : QEMU command\nc : CPUS\nm : MEMORY\nd : DISPLAY type\nM : MONITOR type\ns : SERIAL device\ni : Interface\n"
 			echo "See file for more details"
 			exit
 			;;
