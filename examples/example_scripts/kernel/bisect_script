@@ -52,7 +52,7 @@ while getopts ${OPTSTRING} opt; do
 	esac
 done
 
-COMMAND="make -s -j$THREADS O=$BUILD_DIR $FILES CC='$COMPILER' ARCH=$ARCH"
+COMMAND="make -s -j$THREADS O=$BUILD_DIR $FILES CROSS_COMPILE='$COMPILER' ARCH=$ARCH"
 printf "Files: $FILES\n$COMMAND\n"
 #This compiles ALL commits from SHA~NUM_COMMITS, printing out ONLY errors
 #To access a specific commit for debugging, simply checkout SHA~NUM
