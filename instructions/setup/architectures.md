@@ -7,6 +7,7 @@ losetup should be used for images with partition tables, mount can be used
 directly for those without.
 
 # x86
+
 Here defconfig works.
 We get a BzImage located in kernel/arch/x86/boot/BzImage.
 
@@ -15,6 +16,16 @@ To boot qemu, here are particular defaults:
 1) `append root=/dev/vda` instead of `/dev/sda1`
 2) Our input file must have the virtio interface `if=virtio`
 
+# Arm
+Arm is 32-bit, aarch64 (arm64) is 64 bit.
+Ebbr is for booting (Base Boot Requirements).
+Sbsa is for servers (Base System Architecture).
+Virt is for vritualization (for software testing).
+
+RISC (Reduced Instruction Set Computer) - less instructions encoded on
+the cpu. Basically, the CPU is less proactive to minimize energy costs.
+
+Arm does not do bzImage, just Image.
 
 # m68k
 Here defconfig works.
