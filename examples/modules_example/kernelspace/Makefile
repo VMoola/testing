@@ -1,3 +1,7 @@
+#These 2 get propogated down to the core make
+#ARCH : Architecture we are compiling for
+#CROSS_COMPILE : Prefix to the cross compiler
+
 #FILENAME : name of the module we are building (no .c)
 #K : Build directory of the kernel, relative to $(HOME)/kernel/
 #	- Expects "make modules" and "make modules_prepare" already done
@@ -34,5 +38,5 @@ clean:
 	rm $(TARGET).ko
 
 help:
-	@printf "FILENAME=Module_name\nK=Kernel_build_dir\nD=Module_Destination\n"
+	@printf "FILENAME=Module_name\nK=Kernel_build_dir\nD=Module_Destination\nARCH=Architecture\nCROSS_COMPILE=Cross-compiler-prefix\n"
 	@printf "See file for more details\n"
