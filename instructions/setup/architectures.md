@@ -11,7 +11,7 @@ directly for those without.
 Here defconfig works.
 We get a BzImage located in kernel/arch/x86/boot/BzImage.
 
-For buildroot:
+For buildroot images:
 To boot qemu, here are particular defaults:
 1) `append root=/dev/vda` instead of `/dev/sda1`
 2) Our input file must have the virtio interface `if=virtio`
@@ -26,6 +26,23 @@ RISC (Reduced Instruction Set Computer) - less instructions encoded on
 the cpu. Basically, the CPU is less proactive to minimize energy costs.
 
 Arm does not do bzImage, just Image.
+
+For mkosi images see [mkosi arm64 example](/examples/example_configs/mkosi/booting/qemu_test.conf):
+To boot qemu, here are particular defaults:
+
+0) `-a aarch64 #Arch`
+1) `-q [anyplaceholder] <- This must follow the arch definition`
+2) `-K [path_to_Image] #kernel`
+3) `-b [path_to_image.raw] #rootfs`
+4) `-R /dev/vda1` instead of `/dev/sda1 #rootfs path`
+5) `-i "none,id=hd0" #interface`
+6) `-C ttyAMA0 #Console`
+7) `-M virt #Machine type`
+8) `-cpu cortex-a53 #CPU model`
+9) `-device virtio-blk-device,drive=hd0 #tie the device type to the rootfs`
+
+For buildroot images:
+0) The same as mkosi except: `-R /dev/vda`
 
 # m68k
 Here defconfig works.
