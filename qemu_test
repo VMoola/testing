@@ -23,7 +23,7 @@ source $TESTING_REPO/examples/example_scripts/host/load_config
 #s - Serial type (usually none, vc, or stdio - See QEMU man page)
 #i - Iterface (see QEMU man page)
 
-OPTSTRING="a:A:b:e:p:u:k:K:q:Q:r:R:c:m:d:M:s:i:h"
+OPTSTRING="a:A:b:e:p:u:k:K:q:Q:r:R:C:c:m:d:M:s:i:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -57,6 +57,9 @@ while getopts ${OPTSTRING} opt; do
 		R)
 			RPATH=${OPTARG}
 			;;
+		C)
+			CONSOLE=${OPTARG}
+			;;
 		q)
 			QEMU="qemu-system-${ARCH}"
 			;;
@@ -82,7 +85,7 @@ while getopts ${OPTSTRING} opt; do
 			INTERFACE=${OPTARG}
 			;;
 		h)
-			printf "a : ARCH\nA : Accelerator\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nR : Root path\nq : Use qemu-system-ARCH\nQ : QEMU command\nc : CPUS\nm : MEMORY\nd : DISPLAY type\nM : MONITOR type\ns : SERIAL device\ni : Interface\nu : Add custom parameters\n"
+			printf "a : ARCH\nA : Accelerator\nb : BOOT_FILE absolute path\ne : EXTRA absolute path\np : BOOT_PARAMS\nk : Kernel BUILD_DIR\nK : absolute Kernel path\nr : ROOTFS\nR : Root path\nC : Console\nq : Use qemu-system-ARCH\nQ : QEMU command\nc : CPUS\nm : MEMORY\nd : DISPLAY type\nM : MONITOR type\ns : SERIAL device\ni : Interface\nu : Add custom parameters\n"
 			echo "See file for more details"
 			exit
 			;;
@@ -93,7 +96,7 @@ done
 COMMAND="$QEMU \
      -kernel $KERNEL_PATH \
      -drive format=raw,file=$BOOT_FILE,if=$INTERFACE \
-     -append 'root=$RPATH rw rootfstype=$ROOTFS console=ttyS0 $BOOT_PARAMS' \
+     -append 'root=$RPATH rw rootfstype=$ROOTFS console=$CONSOLE $BOOT_PARAMS' \
      -accel $ACCEL \
      -m $MEMORY \
      -s \
