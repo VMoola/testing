@@ -14,6 +14,15 @@ cp examples/example_configs/mkosi/mkosi_repart.conf mkosi.repart/.
 ./setup
 ```
 
+If you want to cross compile images, take a look at the [buildroot](instructions/setup/buildroot.md) and [mkosi](instructions/setup/mkosi.md).
+
+mkosi is prepped for supporting distributions (and package managers).
+This is handy when we want to do extensive testing that is made easier
+with external packages.
+
+Buildroot is better for rapid iteration testing with custom testcases/drivers
+that have minimal package dependencies.
+
 # Workflow
 
 0) Setup the mkosi image for qemu. This only needs to be done once.
