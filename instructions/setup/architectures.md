@@ -44,6 +44,33 @@ To boot qemu, here are particular defaults:
 For buildroot images:
 0) The same as mkosi except: `-R /dev/vda`
 
+# s390x
+
+s390x focuses on consistent, high throughput workloads.
+
+CISC (Complex Instruction Set Computer) - the CPU does more proactive
+work.
+
+Does use a bzImage.
+defconfig missing `9P` and `VIRTIO` for shared filesystem mount. Its easiest to set
+these directly in the config:
+```
+CONFIG_NET_9P=y
+CONFIG_NET_9P_VIRTIO=y
+CONFIG_9P_FS=y
+CONFIG_VIRTIO_NET=y #for ssh (and makes console consistent?)
+```
+
+qemu does NOT support NUMA for s390x.
+
+For mkosi, this command works:
+```
+qemu-system-s390x -M s390-ccw-virtio -m 4G -smp 4 -kernel ~/kernel/s390x/arch/s390/boot/bzImage -drive file=~/images/mkosi/s390x/image.raw,if=virtio,format=raw -append "rootwait root=/dev/vda1 console=hvc0" -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-ccw,netdev=n1 -fsdev local,id=host0,path=mkosi.extra,security_model=passthrough -device virtio-9p-ccw,fsdev=host0,mount_tag=host0
+```
+TODO: Make a config for our qemu script. This seems to be very particular...
+From what I can tell, we can't do the -net nic or -virtfs that we can for
+arm64 and x86.
+
 # m68k
 Here defconfig works.
 We get a vmlinux located in kernel/vmlinux.
