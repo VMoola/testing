@@ -71,6 +71,35 @@ TODO: Make a config for our qemu script. This seems to be very particular...
 From what I can tell, we can't do the -net nic or -virtfs that we can for
 arm64 and x86.
 
+# ppc64-le
+
+ppc64-le focuses on embedded functionality.
+pseries is for lighter development (vm).
+power9v is for platform development (emulates Bare-Metal).
+
+RISC (Reduced Instruction Set Computer)
+
+Uses vmlinux.
+defconfig missing `9P` and `VIRTIO` for shared filesystem mount. Its easiest to set
+these directly in the config:
+```
+CONFIG_NET_9P=y
+CONFIG_NET_9P_VIRTIO=y
+CONFIG_9P_FS=y
+CONFIG_VIRTIO_NET=y #for ssh (and makes console consistent?)
+CONFIG_FUSE=y
+CONFIG_VIRTIO_FS=y
+CONFIG_VIRTIO_PCI=y
+```
+
+For mkosi, this command works:
+```
+qemu-system-ppc64 -M pseries,x-vof=on -cpu POWER8 -m 1G -smp 4 -kernel ~/kernel/ppc64/vmlinux -append "console=hvc0 rootwait root=/dev/sda1" -drive file=~/images/mkosi/ppc64/image.raw,if=scsi,index=0,format=raw -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-pci,netdev=n1 -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0
+```
+TODO: Make a config for our qemu script. This seems to be very particular...
+From what I can tell, we can't do the -net nic that we can for arm64 and x86.
+Doing it the similar to s390x appears to work though.
+
 # m68k
 Here defconfig works.
 We get a vmlinux located in kernel/vmlinux.
