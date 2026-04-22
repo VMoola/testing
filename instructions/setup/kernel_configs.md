@@ -15,6 +15,25 @@ DEBUG_VM - memory related debugging in general
 "make debug.config" is good for thorough intensive testing, just sometimes
 bigger/more excessive than necessary.
 
+# Internet Functionality
+
+For internet + ssh functionality, we need the following config options enabled:
+```
+CONFIG_VIRTIO_NET=y #for ssh (and makes console consistent?)
+CONFIG_FUSE=y
+CONFIG_VIRTIO_FS=y
+CONFIG_VIRTIO_PCI=y
+```
+
+# Shared Filesystem Directory
+
+For a shared filesystem directory, we need the following:
+```
+CONFIG_NET_9P=y
+CONFIG_NET_9P_VIRTIO=y
+CONFIG_9P_FS=y
+```
+
 # QEMU Controls
 
 To change between the qemu window and qemu monitor, use "ALT + {1,2}".

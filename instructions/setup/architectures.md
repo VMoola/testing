@@ -52,14 +52,10 @@ CISC (Complex Instruction Set Computer) - the CPU does more proactive
 work.
 
 Does use a bzImage.
-defconfig missing `9P` and `VIRTIO` for shared filesystem mount. Its easiest to set
-these directly in the config:
-```
-CONFIG_NET_9P=y
-CONFIG_NET_9P_VIRTIO=y
-CONFIG_9P_FS=y
-CONFIG_VIRTIO_NET=y #for ssh (and makes console consistent?)
-```
+
+defconfig missing important kernel configs. See [shared filesystem](/instructions/setup/kernel_configs.md)
+and [internet functionality](/instructions/setup/kernel_configs.md) sections
+in the kernel config instructions.
 
 qemu does NOT support NUMA for s390x.
 
@@ -80,17 +76,10 @@ power9v is for platform development (emulates Bare-Metal).
 RISC (Reduced Instruction Set Computer)
 
 Uses vmlinux.
-defconfig missing `9P` and `VIRTIO` for shared filesystem mount. Its easiest to set
-these directly in the config:
-```
-CONFIG_NET_9P=y
-CONFIG_NET_9P_VIRTIO=y
-CONFIG_9P_FS=y
-CONFIG_VIRTIO_NET=y #for ssh (and makes console consistent?)
-CONFIG_FUSE=y
-CONFIG_VIRTIO_FS=y
-CONFIG_VIRTIO_PCI=y
-```
+
+defconfig missing important kernel configs. See [shared filesystem](/instructions/setup/kernel_configs.md)
+and [internet functionality](/instructions/setup/kernel_configs.md) sections
+in the kernel config instructions.
 
 For mkosi, this command works:
 ```
