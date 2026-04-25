@@ -99,7 +99,6 @@ COMMAND="$QEMU \
      -append 'root=$RPATH rw rootfstype=$ROOTFS console=$CONSOLE $BOOT_PARAMS' \
      -accel $ACCEL \
      -m $MEMORY \
-     -s \
      -serial $SERIAL \
      -monitor $MONITOR \
      -display $DISPLAY \

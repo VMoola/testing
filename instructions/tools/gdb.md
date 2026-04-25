@@ -9,6 +9,10 @@ GDB works after we've compiled a kernel, and from that source tree ran:
 "make scripts_gdb"
 ```
 
+# QEMU linkage
+We need to open up the qemu networking to listen for gdb. The simplest way
+to do this is with the `-s` argument.
+
 # Useful commands
 
 ```
