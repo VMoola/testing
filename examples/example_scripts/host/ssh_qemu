@@ -7,4 +7,20 @@ source $TESTING_REPO/examples/example_scripts/host/load_config
 #1 - log onto the guest
 #2 - mount the shared directory
 #3 - run the "example_ssh_setup" script
-ssh root@localhost -p10022 -o StrictHostKeyChecking=no
+
+# p - port
+OPTSTRING="p:h"
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		p)
+			PORT=${OPTARG}
+			;;
+		h)
+			printf "p : Port\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+ssh root@localhost -p$PORT -o StrictHostKeyChecking=no
