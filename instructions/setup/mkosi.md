@@ -17,3 +17,15 @@ We can cross compile images with mkosi as well. This depends on:
 
 # Supported Architectures
 Fedora: https://fedoraproject.org/wiki/Architectures.
+
+# Reproduceability
+`Incremental=yes` tells mkosi to prioritize building images from the
+mkosi.cache/ if it exists.
+
+Usefulness:
+* Guarantee multiple images have identical distro/packages
+* Worried about image corruption during testing (speeds up rebuilds,
+especially for cross-architecture)
+
+Cons:
+* Takes up disk space (~1.6G for x86 fstests)
