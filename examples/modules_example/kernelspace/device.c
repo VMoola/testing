@@ -3,6 +3,7 @@
 #include <linux/printk.h>
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
+#include <linux/proc_fs.h>
 
 //Ensure this precisely matches the application!
 #define ALLOC _IOWR('a',1,int)
@@ -29,6 +30,43 @@ static int device_mmap(struct file *file, struct vm_area_struct *vm);
 static long device_ioctl(struct file *file, unsigned int ioctl_enum,
 			unsigned long args); //effectively a void *
 
+#define PROC_NAME "my_module"
+static int my_knob_value = 0;
+static struct proc_dir_entry *proc_entry;
+
+
+static ssize_t my_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+{
+    char kbuf[16];
+    int len = snprintf(kbuf, sizeof(kbuf), "%d\n", my_knob_value);
+
+    return simple_read_from_buffer(buf, count, pos, kbuf, len);
+}
+
+static ssize_t my_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
+{
+    char kbuf[16];
+
+    if (count > sizeof(kbuf) - 1)
+	    return -EINVAL;
+    if (copy_from_user(kbuf, buf, count))
+	    return -EFAULT;
+    kbuf[count] = '\0';
+
+    // Convert string to integer and update setting
+    if(kstrtoint(kbuf, 10, &my_knob_value)) {
+	//Failed on overflow or invalid
+    }
+
+    return count;
+}
+
+/* We've implemented read and write */
+static const struct proc_ops my_proc_ops = {
+    .proc_read = my_read,
+    .proc_write = my_write,
+};
+
 //block devices use "struct block_device_operations"
 static struct file_operations fops = {
 	.open = device_open,
@@ -43,6 +81,8 @@ int __init load(void)
 	pr_info("Hello world");
 	MAJOR = register_chrdev(0, "test_mod", &fops);
 
+	//Makes a proc entry at /proc/PROC_NAME
+	proc_entry = proc_create(PROC_NAME, 0666, NULL, &my_proc_ops);
 	/*the command (from userspace) makes the character
 	 * device file for our fops to act on.
 	 */
@@ -70,6 +110,7 @@ void __exit unload(void)
 	free_page((unsigned long)allocations);
 	//vfree(allocations);
 	pr_info("Goodbye world\n");
+	remove_proc_entry(PROC_NAME, NULL);
 }
 
 module_init(load);
