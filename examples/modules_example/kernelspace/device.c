@@ -2,10 +2,12 @@
 #include <linux/module.h> // Required for all modules
 #include <linux/printk.h>
 #include <linux/vmalloc.h>
+#include <linux/mm.h>
 
 //Ensure this precisely matches the application!
 #define ALLOC _IOWR('a',1,int)
 #define FREE _IOWR('a',2,int)
+#define RD _IOWR('a', 3, int)
 
 int __init load(void);
 void __exit unload(void);
@@ -61,6 +63,10 @@ int __init load(void)
 void __exit unload(void)
 {
 	//kfree(allocations);
+	while (current_allocs) {
+		struct page *p = allocations[--current_allocs];
+		__free_pages(p, compound_order(p));
+	};
 	free_page((unsigned long)allocations);
 	//vfree(allocations);
 	pr_info("Goodbye world\n");
@@ -83,9 +89,58 @@ static int device_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static int write_to_page(struct page **allocs, unsigned int idx,
+			unsigned int len, unsigned long data)
+{
+	void *vaddr;
+	char buf[8] = "HARDCODE";
+	struct page *page;
+
+	/*
+	 * Obviously, if we kmalloc or vmap we don't need this.
+	 * We should just do page_address for 1 page, but this
+	 * is just for the example
+	 */
+	page = allocations[idx];	//index of allocation
+	vaddr = vmap((struct page **)&allocations[idx], 1, VM_MAP, PAGE_KERNEL);
+
+	memcpy(vaddr, buf, len);
+	vunmap(vaddr);
+	return 0;
+}
+
+static int read_from_page(struct page **allocs, unsigned int idx,
+			unsigned int len, unsigned long data)
+{
+	void *vaddr;
+	char *buf;
+	struct page *page;
+
+	buf = kmalloc(len, GFP_KERNEL);
+	/*
+	 * Obviously, if we kmalloc or vmap we don't need this.
+	 * We should just do page_address for 1 page, but this
+	 * is just for the example
+	 */
+	page = allocations[idx];	//index of allocation
+	vaddr = vmap((struct page **)&page, 1, VM_MAP, PAGE_KERNEL);
+
+	memcpy(buf, vaddr, len);
+	printk("The message from userspace through the page is : %s\n", buf);
+	vunmap(vaddr);
+	kfree(buf);
+	return 0;
+}
+
 static int device_mmap(struct file *file, struct vm_area_struct *vm)
 {
-	//printk("mmaped the file\n");
+	if (!current_allocs) {
+		//WARN(1, "We don't have any memory to mmap.");
+		return -EINVAL;
+	}
+
+	vm_insert_page(vm, vm->vm_start, (struct page*) allocations[current_allocs-1]);
+	printk("mmaped a page\n");
 	return 0;
 }
 
@@ -101,6 +156,7 @@ static int alloc(int size)
 	}
 
 	allocations[current_allocs++] = alloc_pages(GFP_KERNEL | __GFP_COMP, size);
+	write_to_page((struct page**) allocations, current_allocs-1, 8, 0);
 	return 0;
 }
 
@@ -121,6 +177,12 @@ static long device_ioctl(struct file *file, unsigned int ioctl_enum,
 	//since args is a pointer, we can cast to what we expect
 	//printk("ioctl called %d\n", ioctl_enum);
 	int size;
+
+	//Structurally, this just copies a userspace virtual address
+	//This means we can actually capture this address and use it
+	//later so long as the virtual address remains alive. Its a
+	//bit silly so we don't do it here, but theres definitely use
+	//cases for it.
 	if (copy_from_user(&size, (int *)args, sizeof(size)))
 		pr_err("Failed to store size!\n");
 	switch (ioctl_enum) {
@@ -130,7 +192,13 @@ static long device_ioctl(struct file *file, unsigned int ioctl_enum,
 		case FREE:
 			frees(size);
 			break;
-
+		case RD:
+			//Read size bytes most recently added page
+			//If we change our ioctl to take a different
+			//structure, we can supply multiple arguments
+			read_from_page((struct page **) allocations,
+					current_allocs-1, size, 0);
+			break;
 	};
 	if (copy_to_user((int *)args, &current_allocs, sizeof(current_allocs)))
 		pr_err("Failed to report size!\n");
