@@ -20,7 +20,7 @@ while getopts ${OPTSTRING} opt; do
 			DEST=${OPTARG}
 			;;
 		h)
-			printf "s : SOURCE KERNEL\nd : DEST_PATH\n"
+			printf "k : SOURCE KERNEL\nd : DEST_PATH\n"
 			echo "See file for more details"
 			exit
 			;;
