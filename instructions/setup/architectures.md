@@ -8,6 +8,9 @@ directly for those without.
 
 # x86
 
+For 64 bit, use the `x86_64` directory. We also need a different image
+from buildroot as its a different CPU architecture.
+
 Here defconfig works.
 We get a BzImage located in kernel/arch/x86/boot/BzImage.
 
