@@ -34,6 +34,20 @@ CONFIG_NET_9P_VIRTIO=y
 CONFIG_9P_FS=y
 ```
 
+# BPF Support
+
+The bare minimum:
+
+```
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+```
+
+We can look through the kernel hacking tracers section to enable more tracepoints such as:
+```
+CONFIG_FUNCTION_TRACER=y
+```
+
 # QEMU Controls
 
 To change between the qemu window and qemu monitor, use "ALT + {1,2}".
