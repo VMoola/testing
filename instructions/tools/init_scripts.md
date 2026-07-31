@@ -13,20 +13,9 @@ cpio -it < [cpio]
 qemu_test -u "-initrd [cpio]" -p "rdinit=/[path]"  // The slash is important!
 ```
 
-In our rdinit program, we can call the rest:
-
-```
-#include <unistd.h>
-
-// For for each binary we want to run
-int pid = fork();
-if (pid == 0)
-    execl("/[binary]", "[binary]", (char *)NULL);
-```
-
 # Usage
 
-We can do this with any of the [examples](/examples/modules_example/userspace).
+See the [rdinit example](/examples/modules_example/userspace/rdinit.c).
 
 # Notes
 
