@@ -22,12 +22,11 @@ int main(){
 	}
 
 	// Executing other binaries
-	for (int i = 1; i < 5; i++) {
+	for (int i = 0; i < 1; i++) {
 		int pid = fork();
 		if (pid == 0)
 			execl("/share/a.out", "a.out", (char *)NULL);
 	}
 
-	// Hang instead of crash to allow inspection
-	pause();
+	execl("/share/bash", "bash", (char *) NULL);
 }

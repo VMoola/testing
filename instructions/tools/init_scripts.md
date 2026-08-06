@@ -26,3 +26,16 @@ a standard main function.
 CPIO generation works best when we do it directly from the parent. Extra
 filesystem links in between our location and the parent (share) directory
 appear to break the hierarchy.
+
+# Useful
+Bash is the core of all of our scripts, so we can use a statically linked
+bash in our init here. The whole preparation only takes a couple minutes.
+
+```
+wget https://ftp.gnu.org/gnu/bash/bash-[ver].tar.gz
+tar -xvzf bash-[ver].tar.gz [extracted]
+cd [extracted]
+./configure --enable-static-link
+make -j$(nproc)
+# bash is an executable found here
+```
