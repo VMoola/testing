@@ -2,6 +2,9 @@
 #include <fcntl.h>	// For open
 #include <sys/syscall.h>// For syscall
 
+#include <sys/stat.h>	// For mkdir
+#include <sys/mount.h>	// For mount
+
 /*
  * Our cpio needs the following 2 files:
  *	- share
@@ -21,7 +24,25 @@ int main(){
 		syscall(SYS_finit_module, fd, "", 0);
 	}
 
+	// populates /dev
+	mount("devtmpfs", "/dev", "devtmpfs", 0, NULL);
+
+	mkdir("/mnt", 0755);
+
+	/* This won't work on our base / directory
+	 * After this call, we can execute binaries found
+	 * within the disk so long as they are statically compiled!
+	 *
+	 * Dynamically compiled fail due to dependency linking being
+	 * filesystem dependent.
+	 */
+	if(mount("/dev/sda1", "/mnt", "ext4", 0, NULL)) {
+		write(1, "Failed mount\n", 13);
+	};
+
 	// Executing other binaries
+	// Due to our mount above, we can also execute binaries found
+	// on the disk if we know the pathway.
 	for (int i = 0; i < 1; i++) {
 		int pid = fork();
 		if (pid == 0)
