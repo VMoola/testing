@@ -10,6 +10,7 @@ rustup-init - ignore the warnings
 source ~/.bashrc
 rustup default nightly
 rustup component add rust-src
+rustup target add [arch]-unknown-linux-musl  #for static linking
 ```
 
 Once we've installed the prerequisite packages, we simply regenerate
