@@ -8,8 +8,7 @@
 /*
  * Our cpio needs the following 2 files:
  *	- share
- *	---> a.out
- *	---> hello.ko
+ *	---> busybox
  * Error handling isn't implemented, so if they are not found, we will
  * simply hang when calling init.
  */
@@ -46,7 +45,12 @@ int main(){
 	for (int i = 0; i < 1; i++) {
 		int pid = fork();
 		if (pid == 0)
-			execl("/share/a.out", "a.out", (char *)NULL);
+			if (execl("/share/a.out", "a.out", NULL)) {
+				// Cleanup children on failure, otherwise...
+				// BOOM
+				write(1, "Failed to run script\n", 21);
+				_exit(0);
+			}
 	}
 
 	/*
