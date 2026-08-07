@@ -49,5 +49,12 @@ int main(){
 			execl("/share/a.out", "a.out", (char *)NULL);
 	}
 
-	execl("/share/bash", "bash", (char *) NULL);
+	/*
+	 * Command arguments get passed in as a NULL terminated string.
+	 * We've already mounted our disk. If it has the required setup,
+	 * we can chroot into it. If not, we have to access it via a shell.
+	 */
+	// Uncomment for access to our rdinit environment.
+	//execl("/share/busybox", "busybox", "sh", NULL);
+	execl("/share/busybox", "busybox", "chroot", "/mnt", NULL);
 }

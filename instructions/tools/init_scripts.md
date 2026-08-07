@@ -39,3 +39,14 @@ cd [extracted]
 make -j$(nproc)
 # bash is an executable found here
 ```
+
+BusyBox is a nice executable that aggregates many other basic executeables.
+
+```
+wget https://busybox.net/downloads/busybox-[ver].tar.bz2
+tar -xpf busybox-[ver].tar.bz2 [extracted]
+cd [extracted]
+make menuconfig #enable static compilation
+make -j$(nproc)
+#busybox is an executable found here
+```
