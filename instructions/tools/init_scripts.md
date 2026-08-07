@@ -16,6 +16,7 @@ qemu_test -u "-initrd [cpio]" -p "rdinit=/[path]"  // The slash is important!
 # Usage
 
 See the [rdinit example](/examples/modules_example/userspace/rdinit.c).
+For custom disks (i.e. no proper system layout), see [disk images](/instructions/setup/disks.md).
 
 # Notes
 
