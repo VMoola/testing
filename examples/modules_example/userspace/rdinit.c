@@ -60,5 +60,18 @@ int main(){
 	 */
 	// Uncomment for access to our rdinit environment.
 	//execl("/share/busybox", "busybox", "sh", NULL);
-	execl("/share/busybox", "busybox", "chroot", "/mnt", NULL);
+
+	write(1, "Launching Systemd\n", 18);
+	int pid = fork();
+		if (pid == 0) {
+			execl("/share/busybox", "busybox", "touch", "/init", NULL);
+		} else {
+			/* We must ensure /init is present, so wait on
+			 * the child before our switch_root
+			 */
+			int status;
+			syscall(SYS_wait4, pid, &status, 0, NULL);
+
+			execl("/share/busybox", "busybox", "switch_root", "/mnt", "/usr/lib/systemd/systemd", NULL);
+		}
 }
