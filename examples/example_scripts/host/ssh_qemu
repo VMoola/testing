@@ -9,18 +9,21 @@ source $TESTING_REPO/examples/example_scripts/host/load_config
 #3 - run the "example_ssh_setup" script
 
 # p - port
-OPTSTRING="p:h"
+OPTSTRING="p:u:h"
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
 		p)
 			PORT=${OPTARG}
 			;;
+		u)
+			USER=${OPTARG}
+			;;
 		h)
-			printf "p : Port\n"
+			printf "p : Port\nu : Add custom parameters\n"
 			echo "See file for more details"
 			exit
 			;;
 	esac
 done
 
-ssh root@localhost -p$PORT -o StrictHostKeyChecking=no
+ssh root@localhost -p$PORT -o StrictHostKeyChecking=no $USER
