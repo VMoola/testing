@@ -15,3 +15,8 @@ If a drive has a partition table, it will be suffixed with numbers corresponding
 `/dev/sda[IF has partition table] -> /dev/sdb[IF has partition table] ...`.
 
 We should mount using `mount [src] [dest] -t [fs]`.
+
+# Host modification
+
+We can use our [mount script](/examples/example_scripts/host/mount_image) to
+provide our host access to the guest.
