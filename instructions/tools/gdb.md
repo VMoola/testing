@@ -4,7 +4,9 @@ GDB can be a useful tool for kernel debugging. For example, if we BUG()
 or deadlock, we are now hanging. GDB can connect and uncover everything
 about the current state of the kernel.
 
-GDB works after we've compiled a kernel, and from that source tree ran:
+GDB works after we've compiled a kernel with the prequisite
+[config](/instructions/setup/kernel_configs.md), and from that source tree ran:
+
 ```
 "make scripts_gdb"
 ```

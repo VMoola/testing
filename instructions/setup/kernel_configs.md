@@ -60,8 +60,14 @@ Useful config dependencies are:
 PAGE_OWNER - for tracking page allocation information
 MEMORY_ALLOCATION_PROFILING - lightweight page allocation information
 MODULES_FORCE_UNLOAD - for unloading test modules even if kernel is unsafe
-GDB_SCRIPTS - debugging symbols for gdb (must run "make scripts_gdb")
 *_SELFTESTS - enables selftest support for that feature
+```
+
+# GDB
+
+```
+GDB_SCRIPTS - debugging symbols for gdb (must run "make scripts_gdb")
+DEBUG_INFO_REDUCED=n - Ensures that we have the full debug symbols
 ```
 
 For proper debugging, all we need is the vmlinux and the bzImage.
