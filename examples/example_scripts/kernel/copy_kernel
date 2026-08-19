@@ -32,6 +32,7 @@ done
 mkdir $DEST || exit
 
 # It is expected that all these files/directories are present in the build
+# For GDB-able kernels, we also need the vmlinux-gdb.py
 
 declare -a FILES=("Makefile" "vmlinux" "Module.symvers")
 declare -a DIRS=("arch" "scripts" "tools")

@@ -5,7 +5,8 @@ or deadlock, we are now hanging. GDB can connect and uncover everything
 about the current state of the kernel.
 
 GDB works after we've compiled a kernel with the prequisite
-[config](/instructions/setup/kernel_configs.md), and from that source tree ran:
+[config](/instructions/setup/kernel_configs.md), and from that source tree generated
+a vmlinux-gdb.py:
 
 ```
 "make scripts_gdb"
