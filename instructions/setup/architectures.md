@@ -47,6 +47,9 @@ To boot qemu, here are particular defaults:
 For buildroot images:
 0) The same as mkosi except: `-R /dev/vda`
 
+For Mac M5s:
+0) `-accel hvf #Instead of kvm` AND `-cpu host #Instead of cortex`
+
 # s390x
 
 s390x focuses on consistent, high throughput workloads.
