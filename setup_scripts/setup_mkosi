@@ -1,3 +1,29 @@
 #! /bin/bash
+
+# This is expected to be run ONLY from the repository root. There's a way
+# to properly propogate this down to the other scripts, but that begins to get
+# overly complicated. At that point, just make a custom config for yourself.
+# There is no intention to add flexibility to these parameters.
+TESTING_REPO=~/testing
+MKOSI_CONFIGS="$TESTING_REPO/examples/example_configs/mkosi/building"
+
+# Use default configs for mkosi if they don't exist.
+if [ ! -f "mkosi.conf" ]; then
+	cp "$MKOSI_CONFIGS/mkosi_fstests.conf" "mkosi.conf"
+fi
+
+mkdir -p mkosi.cache mkosi.builddir mkosi.repart
+
+if [ ! -f "mkosi.repart/mkosi_repart.conf" ]; then
+	cp "$MKOSI_CONFIGS/mkosi_repart.conf" "mkosi.repart/."
+fi
+
 #mkosi sets up the image. This needs to be re-run anytime we want a change in mkosi.default to change the image specs.
 mkosi
+
+# mkosi leaves behind an "image" symlink. Clean it up if it's there.
+# If we don't do this, mkosi will do nothing on future runs even if the
+# image.raw itself is deleted.
+if [ -L "image" ]; then
+	rm -rf "image"
+fi
