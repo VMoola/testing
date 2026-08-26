@@ -1,0 +1,17 @@
+#! /bin/bash
+
+# This is expected to be run ONLY from the repository root. There's a way
+# to properly propogate this down to the other scripts, but that begins to get
+# overly complicated. At that point, just make a custom config for yourself.
+# There is no intention to add flexibility to these parameters.
+TESTING_REPO=~/testing
+IMAGE="image.raw"
+SHARE_DIR="mkosi.extra"
+
+# If we don't have an image, make it so qemu doesn't fail.
+if [ ! -f "$IMAGE" ]; then
+	"setup_scripts/setup_mkosi"
+fi
+
+mkdir -p "$SHARE_DIR"
+"$TESTING_REPO/qemu_test"
