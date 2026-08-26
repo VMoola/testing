@@ -1,0 +1,2 @@
+#! /bin/bash
+"setup_scripts/build" || { printf "Kernel build failed\n" >&2; exit 1; }
