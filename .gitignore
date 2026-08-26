@@ -6,3 +6,4 @@ mkosi.extra
 mkosi.repart
 image*
 init*
+kernel

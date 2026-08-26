@@ -3,13 +3,13 @@
 #CROSS_COMPILE : Prefix to the cross compiler
 
 #F : name of the module we are building (no .c)
-#K : Build directory of the kernel, relative to $(HOME)/kernel/
+#K : Build directory of the kernel, relative to $(HOME)/testing/kernel/
 #	- Expects "make modules" and "make modules_prepare" already done
 #D : Where the module.ko is copied to.  Typically the shared guest dir,
 #	relative to $(HOME)/testing/
 
 F = hello
-K = $(HOME)/kernel/compiled
+K = $(HOME)/testing/kernel/compiled
 D = $(HOME)/testing/mkosi.extra/modules
 #can be overwritten through the command line "F=modname"
 

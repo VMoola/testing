@@ -13,7 +13,7 @@ source $TESTING_REPO/examples/example_scripts/host/load_config
 #a - ARCH, x86_64 if unsure
 #c - compiler, gcc if unsure (without ARCH might be weird)
 #f - files to make, bzImage to cmdline if unsure
-#o - output directory, appended onto "$HOME/kernel"
+#o - output directory, appended onto "$HOME/testing/kernel"
 #t - number of threads
 
 OPTSTRING="a:c:f:o:t:h"
@@ -30,7 +30,7 @@ while getopts ${OPTSTRING} opt; do
 			FILES=${OPTARG}
 			;;
 		o)
-			BUILD_DIR="$HOME/kernel/${OPTARG}/"
+			BUILD_DIR="$HOME/testing/kernel/${OPTARG}/"
 			;;
 		t)
 			THREADS=${OPTARG}

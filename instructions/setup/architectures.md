@@ -67,7 +67,7 @@ qemu does NOT support NUMA for s390x.
 
 For mkosi, this command works:
 ```
-qemu-system-s390x -M s390-ccw-virtio -m 4G -smp 4 -kernel ~/kernel/s390x/arch/s390/boot/bzImage -drive file=~/images/mkosi/s390x/image.raw,if=virtio,format=raw -append "rootwait root=/dev/vda1 console=hvc0" -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-ccw,netdev=n1 -fsdev local,id=host0,path=mkosi.extra,security_model=passthrough -device virtio-9p-ccw,fsdev=host0,mount_tag=host0
+qemu-system-s390x -M s390-ccw-virtio -m 4G -smp 4 -kernel ~/testing/kernel/s390x/arch/s390/boot/bzImage -drive file=~/images/mkosi/s390x/image.raw,if=virtio,format=raw -append "rootwait root=/dev/vda1 console=hvc0" -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-ccw,netdev=n1 -fsdev local,id=host0,path=mkosi.extra,security_model=passthrough -device virtio-9p-ccw,fsdev=host0,mount_tag=host0
 ```
 TODO: Make a config for our qemu script. This seems to be very particular...
 From what I can tell, we can't do the -net nic or -virtfs that we can for
@@ -89,7 +89,7 @@ in the kernel config instructions.
 
 For mkosi, this command works:
 ```
-qemu-system-ppc64 -M pseries,x-vof=on -cpu POWER8 -m 1G -smp 4 -kernel ~/kernel/ppc64/vmlinux -append "console=hvc0 rootwait root=/dev/sda1" -drive file=~/images/mkosi/ppc64/image.raw,if=scsi,index=0,format=raw -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-pci,netdev=n1 -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0
+qemu-system-ppc64 -M pseries,x-vof=on -cpu POWER8 -m 1G -smp 4 -kernel ~/testing/kernel/ppc64/vmlinux -append "console=hvc0 rootwait root=/dev/sda1" -drive file=~/images/mkosi/ppc64/image.raw,if=scsi,index=0,format=raw -serial stdio -display none -netdev user,id=n1,hostfwd=tcp::10022-:22 -device virtio-net-pci,netdev=n1 -virtfs local,path=mkosi.extra,mount_tag=host0,security_model=passthrough,id=host0
 ```
 TODO: Make a config for our qemu script. This seems to be very particular...
 From what I can tell, we can't do the -net nic that we can for arm64 and x86.
