@@ -1,0 +1,56 @@
+#! /bin/bash
+
+# This is expected to be run ONLY from the repository root. There's a way
+# to properly propogate this down to the other scripts, but that begins to get
+# overly complicated. At that point, just make a custom config for yourself.
+# There is no intention to add flexibility to these parameters.
+TESTING_REPO=~/testing
+OUTPUT_DIR="kernel"
+KERNEL_DIR="dev"
+
+# Defaults
+UPSTREAM="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+PARAMS=""
+
+#parse more complicated command. Expected input is "-{opt}"
+#default is above Arguements. Below is all the options available:
+#u - UPSTREAM - Repository URL to clone the kernel from
+#p - PARAMS - Kernel configuration target (i.e. defconfig)
+
+OPTSTRING="u:p:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		u)
+			UPSTREAM=${OPTARG}
+			;;
+		p)
+			PARAMS=${OPTARG}
+			;;
+		h)
+			printf "u : Kernel repository URL\np : Pass '-h' for more info\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+if [ ! -d "$KERNEL_DIR" ]; then
+	git clone $UPSTREAM "$KERNEL_DIR"
+	FRESH_TREE=1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+cd "$KERNEL_DIR"
+
+# Forcibly generate a base config for a fresh kernel tree so builds don't fail
+if [ -n "$FRESH_TREE" ]; then
+	"$TESTING_REPO/examples/example_scripts/kernel/build_script" -f defconfig
+fi
+
+# This will use our existing config if you have already set one up!
+# Keep that in mind, it might have you overwriting one of your builds
+# if you haven't backed it up already. But honestly you should be using
+# the build_script directly if you're already at that point.
+"$TESTING_REPO/examples/example_scripts/kernel/build_script" "$PARAMS"
+"$TESTING_REPO/examples/example_scripts/kernel/build_script"
