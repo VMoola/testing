@@ -1,6 +1,34 @@
 # Prerequisites
 * mkosi
 * qemu
+* Any requisites to build the linux kernel & modules
+* This repo to be located in "~/testing"
+* A Fedora or Ubuntu System
+
+# Simple Start
+For those of you who have no interest in the granularity of these scripts,
+as long as you are on Fedora with the prerequisites, you can simply run:
+
+If you are x86_64 instead of arm64/aarch64:
+```
+cp -r examples/example_configs/script_configs/ configs
+cp configs/build_configs/x86_64.conf configs/build_script.conf
+cp configs/qemu_configs/x86_64.conf configs/qemu_test.conf
+```
+
+If you are on Ubuntu instead of Fedora:
+```
+cp examples/example_configs/mkosi/building/mkosi_ubuntu.conf mkosi.conf
+```
+
+Then run:
+
+```
+./bringup
+./qemu_test
+```
+
+For anything more control over the setup, read further.
 
 # Setup
 
