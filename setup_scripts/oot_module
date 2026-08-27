@@ -1,0 +1,52 @@
+#! /bin/bash
+
+# This is expected to be run ONLY from the repository root. There's a way
+# to properly propogate this down to the other scripts, but that begins to get
+# overly complicated. At that point, just make a custom config for yourself.
+# There is no intention to add flexibility to these parameters.
+TESTING_REPO=~/testing
+MODULE_DIR="dev_module"
+KERNEL_DIR="dev"
+SYMVERS="kernel/compiled/Module.symvers"
+
+# Defaults
+SOURCE="examples/modules_example/kernelspace"
+SHARE_DIR="mkosi.extra/modules"
+PARAMS=""
+
+#parse more complicated command. Expected input is "-{opt}"
+#default is above Arguements. Below is all the options available:
+#s - SOURCE - Directory to copy the module source from
+#p - PARAMS - Parameters passed to the final make (i.e. "help")
+
+OPTSTRING="s:p:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		s)
+			SOURCE=${OPTARG}
+			;;
+		p)
+			PARAMS=${OPTARG}
+			;;
+		h)
+			printf "s : SOURCE module source directory\np : Params for make - pass help for details\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+# Out-of-tree modules need the Module.symvers from the kernel build
+if [ ! -f "$SYMVERS" ]; then
+	(cd "$KERNEL_DIR" && "$TESTING_REPO/examples/example_scripts/kernel/build_script" -f modules)
+fi
+
+if [ ! -d "$MODULE_DIR" ]; then
+	cp -r "$SOURCE" "$MODULE_DIR"
+fi
+
+mkdir -p "$SHARE_DIR"
+
+cd "$MODULE_DIR"
+make $PARAMS
