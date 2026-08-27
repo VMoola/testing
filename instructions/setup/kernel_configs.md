@@ -3,6 +3,9 @@
 To make a basic configuration file for a kernel, run "make defconfig"
 This is the smallest bootable kernel by qemu.
 
+When compiling our kernel, we can optionally pass in `KCONFIG_CONFIG=[path]`
+which will point the build at a precise preconfigured config for that invocation.
+
 Then go into the config and enable anything we might want based on testing.
 Common config dependencies are:
 ```

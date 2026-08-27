@@ -9,6 +9,8 @@ OUTPUT_DIR="kernel"
 KERNEL_DIR="dev"
 
 # Defaults
+# Its rather useful to point at a different git repo, and rather useful to
+# pass in "KCONFIG_CONFIG=[path]" as PARAMS.
 UPSTREAM="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 PARAMS=""
 
