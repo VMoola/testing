@@ -1,4 +1,4 @@
-dev
+dev*
 configs
 buildroot
 mkosi.cache

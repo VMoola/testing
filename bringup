@@ -1,3 +1,4 @@
 #! /bin/bash
 "setup_scripts/build" || { printf "Kernel build failed\n" >&2; exit 1; }
+"setup_scripts/oot_module" || { printf "Module build failed\n" >&2; exit 1; }
 "setup_scripts/setup_mkosi" || { printf "Image generation failed\n" >&2; exit 1; }
