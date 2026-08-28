@@ -1,0 +1,38 @@
+#! /bin/bash
+
+# This is expected to be run ONLY from the repository root, on a Mac, after
+# setup_scripts/mac has created the VM.
+NAME="kdev"
+MAC_CONFIG="examples/example_configs/script_configs/qemu_configs/mac.conf"
+
+# The paths we copy from are inside the VM, where "~" is the guest user's home.
+GUEST_REPO="$(limactl shell "$NAME" -- bash -lc 'echo $HOME/testing')" || exit 1
+
+# Work inside our VM - prepare everything to be extracted
+limactl shell "$NAME" -- bash -lc \
+	"cd $GUEST_REPO && ./bringup \"\$@\"" bringup_mac "$@" || exit 1
+limactl shell "$NAME" -- bash -lc \
+	"$GUEST_REPO/examples/example_scripts/kernel/copy_kernel"
+
+# Ensure our output goes to our expected path on host. We clear the existing
+# directory to prevent nesting confusions.
+rm -rf kernel/barebones
+mkdir -p kernel
+limactl copy -r "$NAME:$GUEST_REPO/kernel/barebones" kernel/barebones || exit 1
+
+# This carries the freshly built module, so it is always replaced
+# rather than kept - a stale module here is more confusing than none.
+rm -rf mkosi.extra
+limactl copy -r "$NAME:$GUEST_REPO/mkosi.extra" mkosi.extra || exit 1
+
+# Grab the image if do not already have one.
+if [ ! -f "image.raw" ]; then
+	limactl copy "$NAME:$GUEST_REPO/image.raw" image.raw || exit 1
+fi
+# Without this qemu_test won't use HVF. Don't override an existing config.
+if [ ! -f "configs/qemu_test.conf" ]; then
+	mkdir -p configs
+	cp "$MAC_CONFIG" configs/qemu_test.conf
+fi
+
+printf "\nKernel and image are on the host. Boot them with:\n\n\t./qemu_test\n\n"
