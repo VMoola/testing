@@ -1,4 +1,52 @@
 #! /bin/bash
-"setup_scripts/build" || { printf "Kernel build failed\n" >&2; exit 1; }
-"setup_scripts/oot_module" || { printf "Module build failed\n" >&2; exit 1; }
+
+# Defaults
+# These get handed down to the scripts below - see each of them for what the
+# parameters actually mean.
+UPSTREAM=""
+BUILD_PARAMS="-f olddefconfig"
+MODULE_SOURCE=""
+MODULE_PARAMS=""
+
+#parse more complicated command. Expected input is "-{opt}"
+#default is above Arguements. Below is all the options available:
+#u - UPSTREAM - Repository URL to clone the kernel from
+#p - BUILD_PARAMS - Parameters for the kernel build
+#s - MODULE_SOURCE - Directory to copy the module source from
+#m - MODULE_PARAMS - Parameters for the out-of-tree module make
+
+OPTSTRING="u:p:s:m:h"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		u)
+			UPSTREAM=${OPTARG}
+			;;
+		p)
+			BUILD_PARAMS=${OPTARG}
+			;;
+		s)
+			MODULE_SOURCE=${OPTARG}
+			;;
+		m)
+			MODULE_PARAMS=${OPTARG}
+			;;
+		h)
+			printf "u : UPSTREAM kernel repository\np : BUILD_PARAMS for the kernel build\ns : MODULE_SOURCE directory\nm : MODULE_PARAMS for the module make\n"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+BUILD_ARGS=()
+[ -n "$UPSTREAM" ] && BUILD_ARGS+=(-u "$UPSTREAM")
+[ -n "$BUILD_PARAMS" ] && BUILD_ARGS+=(-p "$BUILD_PARAMS")
+
+MODULE_ARGS=()
+[ -n "$MODULE_SOURCE" ] && MODULE_ARGS+=(-s "$MODULE_SOURCE")
+[ -n "$MODULE_PARAMS" ] && MODULE_ARGS+=(-p "$MODULE_PARAMS")
+
+"setup_scripts/build" "${BUILD_ARGS[@]}" || { printf "Kernel build failed\n" >&2; exit 1; }
+"setup_scripts/oot_module" "${MODULE_ARGS[@]}" || { printf "Module build failed\n" >&2; exit 1; }
 "setup_scripts/setup_mkosi" || { printf "Image generation failed\n" >&2; exit 1; }
