@@ -27,8 +27,12 @@ while getopts ${OPTSTRING} opt; do
 	esac
 done
 
-# We want to be careful not to overwrite any files, so
-# exit the script if we fail to make our directory
+# Clear the output path so we can put our files there. Only ever for the default
+# path - a custom DEST could point anywhere, and is not ours to delete.
+if [ "$DEST" = "$TESTING_REPO/kernel/barebones" ] && [ -d "$DEST" ]; then
+	rm -rf "$DEST"
+fi
+
 mkdir $DEST || exit
 
 # It is expected that all these files/directories are present in the build
