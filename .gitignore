@@ -2,6 +2,7 @@ dev*
 configs
 buildroot
 mkosi.cache
+mkosi.packagecache
 mkosi.conf
 mkosi.extra
 mkosi.repart
