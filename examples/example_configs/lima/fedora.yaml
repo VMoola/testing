@@ -1,0 +1,59 @@
+# Lima VM for kernel development on an Apple silicon Mac.
+#
+# The Mac cannot run this workflow directly: mkosi needs systemd-repart and loop
+# devices, and the default macOS filesystem is case-insensitive so the kernel
+# tree cannot even be checked out correctly. Everything therefore runs inside
+# this VM.
+#
+#   limactl create --name=kdev examples/example_configs/lima/fedora.yaml
+#   limactl start kdev
+#   limactl shell kdev
+#
+# Then clone this repo to ~/testing inside the VM and run ./bringup.
+
+minimumLimaVersion: 2.0.0
+
+# Based on the image directly rather than "template:fedora", which also pulls in
+# _default/mounts. Lima merges mount lists, so an empty "mounts:" here would not
+# override it, and the Mac's home would be mounted read-only in the guest.
+base:
+- template:_images/fedora-44
+
+# Sized for a 24GiB / 15-core host, leaving headroom for macOS. Override at
+# creation time with --cpus / --memory / --disk.
+cpus: 12
+memory: 18GiB
+# image.raw alone is 30G, on top of the kernel tree and its build output.
+disk: 150GiB
+
+# This allows our guest to access our agent for keys rather than duplicating
+ssh:
+  forwardAgent: true
+
+# No mounts at all. The kernel tree and image have to live on the VM's own disk
+# regardless: virtiofs is slow for a kernel build, and the macOS filesystem is
+# case-insensitive so the tree cannot be checked out there correctly.
+mounts: []
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+
+    # Image building and the QEMU that boots it.
+    dnf install -y mkosi qemu-system-aarch64 qemu-img
+
+    # Kernel build dependencies. Listed explicitly rather than via
+    # "dnf builddep kernel", which needs source repos enabled and drags in the
+    # full srpm build set.
+    dnf install -y \
+      bc bison ccache cpio diffutils dwarves elfutils-libelf-devel findutils \
+      flex gcc gcc-c++ git kmod make ncurses-devel openssl-devel perl python3 \
+      rsync tar which xz zstd
+
+    dnf install -y rust rust-src rustfmt clang bindgen-cli
+
+    # Prevents blocking on unknown host during ssh - helps automation
+    printf 'Host *\n\tStrictHostKeyChecking accept-new\n' \
+      > /etc/ssh/ssh_config.d/01-lima.conf
