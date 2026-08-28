@@ -1,0 +1,29 @@
+#! /bin/bash
+
+# This is expected to be run ONLY from the repository root.
+#
+# This is the only script in the repo meant to run on a Mac. macOS cannot build
+# or boot these images itself - mkosi needs systemd-repart and loop devices, and
+# the default macOS filesystem is case-insensitive so the kernel tree cannot even
+# be checked out correctly. So the Mac only manages a Linux VM, and every other
+# script in this repo runs inside it.
+TEMPLATE="examples/example_configs/lima/fedora.yaml"
+NAME="kdev"
+
+# Reuse the instance if it is already there.
+if ! limactl list --quiet 2>/dev/null | grep -qx "$NAME"; then
+	# --tty=false, otherwise limactl prompts to confirm the configuration.
+	limactl create --tty=false --name="$NAME" "$TEMPLATE" || exit 1
+fi
+
+# A no-op if it is already running. If we have issues, delete it for a clean install.
+# limactl delete kdev --force
+limactl start "$NAME" || exit 1
+
+# The VM has no mounts by design, so the repo is cloned inside it.
+limactl shell "$NAME" -- bash -lc \
+	"test -d ~/testing || git clone $(git remote get-url origin) ~/testing"
+
+printf "\nDropping you into the VM. From here:\n\n\tcd ~/testing && ./bringup && ./qemu_test\n\n"
+
+exec limactl shell "$NAME"
