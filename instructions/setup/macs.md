@@ -1,13 +1,47 @@
 # Mac Users
 Mac is fancy. Mac is annoying. After playing around with supporting this
-repo on a mac, I have found that we're better off not using a Mac.
-
-If we REALLY must use a mac, then look at the following instructions:
+repo on a mac, I've found it to be complex but possible.
 
 # Pre-Pre Requisites
 - Install homebrew from the website.
 
 # Prerequisites
+```
+brew install lima qemu
+git clone https://github.com/VMoola/testing.git ~/testing
+```
+
+# Simple Start
+We have 2 main scripts for the mac here.
+
+```
+./setup_scripts/mac
+exit
+./bringup_mac
+./qemu_test
+```
+
+The first sets up the vm and leaves us in a shell. Run this command
+to reenter the vm whenever we want to do development. At this point, we
+can have a standalone linux vm, where the core repository works as intended.
+Deleting the vm using `limactl delete kdev --force` will cause the script
+to rebuild it.
+
+The second command enters the vm to prepare all our files, then copies
+them to our mac host and sets it up to launch the guest. `bringup_mac` takes
+the same format of arguments as `bringup`, and passes them down directly.
+
+# Notes
+
+Apple's M3+ does support nested hardware virtualization, but because the
+chips cannot run linux natively, the performance wins from trying to enable
+this are too little for the extra complexity.
+
+Lima does use apples virtualization by default, which is a substantial
+improvement over qemu instances for our computationally intensive work.
+If you want a UTM setup instead, read further.
+
+# UTM
 - Install UTM
 - QEMU* (this is optional, but does allow us to boot kernels from host)
 
@@ -40,7 +74,7 @@ execute binaries due to ABI differences with Mac zsh :/. The files themselves
 remain intact and accessible for tools that use them - such as QEMU. We CAN
 also nest vms, so there's not a lot of reason to worry about that.
 
-# Notes
+# UTM Notes
 
 QEMU on mac doesn't support gtk as a display type. Replace it with `none` and
 the qemu script will work as expected.
