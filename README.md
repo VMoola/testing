@@ -3,7 +3,7 @@
 * qemu
 * Any requisites to build the linux kernel & modules
 * This repo to be located in "~/testing"
-* A Fedora or Ubuntu System
+* A Fedora or Ubuntu System - for macs see [the mac instructions](instructions/setup/macs.md).
 
 # Simple Start
 For those of you who have no interest in the granularity of these scripts,
