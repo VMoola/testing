@@ -22,8 +22,8 @@ limactl copy -r "$NAME:$GUEST_REPO/kernel/barebones" kernel/barebones || exit 1
 
 # This carries the freshly built module, so it is always replaced
 # rather than kept - a stale module here is more confusing than none.
-rm -rf mkosi.extra
-limactl copy -r "$NAME:$GUEST_REPO/mkosi.extra" mkosi.extra || exit 1
+rm -rf mkosi.extra/*
+limactl copy --backend=rsync -r "$NAME:$GUEST_REPO/mkosi.extra/" mkosi.extra/ || exit 1
 
 # Grab the image if do not already have one.
 if [ ! -f "image.raw" ]; then
