@@ -1,6 +1,9 @@
 #![allow(missing_docs)]
 #![allow(unused)]
 #![allow(clippy::undocumented_unsafe_blocks)]
+#![allow(clippy::ref_as_ptr)]
+#![allow(clippy::ptr_as_ptr)]
+#![allow(non_snake_case)]
 
 use kernel::{
     bindings,
@@ -13,6 +16,9 @@ use kernel::{
     module_pci_driver,
     pci_device_table,
     device,
+    page::{
+        Page,
+    },
 };
 
 // Define a bunch of registers, similar to C includes
@@ -24,7 +30,6 @@ mod registers {
         }
     }
 }
-
 
 
 const VENDOR : pci::Vendor = unsafe { core::mem::transmute::<u16, pci::Vendor>(0x1234) };
@@ -53,6 +58,9 @@ pci_device_table!(
 
 struct EduData<'bound> {
     pdev: &'bound pci::Device,
+    // Ensure the page exists for the life of the module
+    dma_src: Page,
+    dma_dst: Page,
 }
 
 impl pci::Driver for Edu {
@@ -81,7 +89,47 @@ impl pci::Driver for Edu {
         // Aka, the compiler does (eval -> intermediary -> cast to usize).
         let full = bar.read(registers::ID).into_raw() as usize;
         pr_info!("Major bytes: {:#x}, Full read: {:#x}", major, full);
-        Ok(EduData { pdev : pdev } )
+
+
+        // DMA test
+        let dma_src = Page::alloc_page(GFP_KERNEL)?;
+        let dma_dst = Page::alloc_page(GFP_KERNEL)?;
+        let message: usize = 777;
+        // Assuming we've implemented "rust_helper_[fxn]", we can do this
+        // to r/w from a page. page_address is not upstream right now.
+        let va = unsafe { bindings::page_address(dma_src.as_ptr()) };
+
+        // This cast works because we take the reference and cast that to
+        // a rust pointer, then cast it to a C pointer. We copy the data
+        // into the page + a message, then read it back and print that.
+        unsafe {
+            // Example of the 'silenced' warning way vs the nitty gritty
+            core::ptr::copy((&full as *const usize).cast(), va, size_of::<usize>());
+            core::ptr::copy(&message as *const usize
+                as *const c_void, va.byte_add(size_of::<usize>()),
+                size_of::<usize>());
+        };
+        let mut val: usize = 0;
+        let mut data = core::mem::MaybeUninit::<usize>::uninit();
+        unsafe {
+            core::ptr::copy(va, &mut val as *mut usize
+                as *mut c_void, size_of::<usize>());
+            core::ptr::copy(va.byte_add(8), &mut data as *mut _ as *mut usize
+                as *mut c_void, size_of::<usize>());
+        };
+        // Tell rust its been initialized, AND set the value. Otherwise
+        // rust will assumes it isn't
+            let data = unsafe {
+                data.assume_init()
+            };
+
+        pr_info!("Hi! This is our major data, read from the backing page we stored it in {:#x}, and message: {:?}", val, data);
+
+        Ok(EduData {
+            pdev : pdev,
+            dma_src: dma_src,
+            dma_dst: dma_dst,
+        } )
     }
 }
 
