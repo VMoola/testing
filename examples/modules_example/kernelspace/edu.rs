@@ -28,6 +28,10 @@ mod registers {
             31:24 Major;
             23:16 Minor;
         }
+        pub(super) FACTORIAL(u32) @0x08 {}
+        pub(super) STATUS(u32) @0x20 {
+            0:0 Compute;
+        }
     }
 }
 
@@ -75,7 +79,7 @@ impl pci::Driver for Edu {
         pr_info!("Hello World!");
 
         pdev.enable_device_mem();
-        let bar = pdev.iomap_region_sized::<0x8>(0, c"educational")?;
+        let bar = pdev.iomap_region_sized::<0x28>(0, c"educational")?;
 
         // We can call our bar functions, and the register! macro has
         // already mapped our specific bits into a way we can call too
@@ -90,11 +94,23 @@ impl pci::Driver for Edu {
         let full = bar.read(registers::ID).into_raw() as usize;
         pr_info!("Major bytes: {:#x}, Full read: {:#x}", major, full);
 
+        // The value to compute - we must convert our input to the register's
+        // own type (i.e. FACTORIAL). We MUST read first, because we always
+        // write the whole register
+        bar.write_reg(registers::FACTORIAL::from(10));
+        let status = bar.read(registers::STATUS);
+        //bar.write_reg(status.with_Compute(false));
+
+        let mut done = true;
+        while done {
+            done = bar.read(registers::STATUS).Compute().into();
+        }
 
         // DMA test
         let dma_src = Page::alloc_page(GFP_KERNEL)?;
         let dma_dst = Page::alloc_page(GFP_KERNEL)?;
-        let message: usize = 777;
+
+        let message: usize = bar.read(registers::FACTORIAL).into_raw() as usize;
         // Assuming we've implemented "rust_helper_[fxn]", we can do this
         // to r/w from a page. page_address is not upstream right now.
         let va = unsafe { bindings::page_address(dma_src.as_ptr()) };
