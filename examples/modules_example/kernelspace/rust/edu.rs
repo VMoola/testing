@@ -70,6 +70,13 @@ impl pci::Driver for Edu {
 
         pdev.enable_device_mem();
         pdev.set_master();
+
+        // This will fail (0 byte mask). This showcases how we can
+        // handle an error and continue the function execution.
+        let mask = kernel::dma::DmaMask::new::<0>();
+        unsafe { kernel::dma::Device::dma_set_mask_and_coherent(pdev,mask).unwrap_or_else(
+            |e|{pr_info!("Expected failure: error {:?}\n", e)})
+        };
         let bar = pdev.iomap_region_sized::<0xA0>(0, c"educational")?;
 
         // We can call our bar functions, and the register! macro has
