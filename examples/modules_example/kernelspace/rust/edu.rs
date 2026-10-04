@@ -62,6 +62,74 @@ struct EduData<'bound> {
     bar: Bar<'bound>,
 }
 
+impl<'bound> EduData<'bound> {
+    // bar MUST be a reference, otherwise it takes ownership (no Copy)
+    // Taking ownership means our probe loses it
+    fn read_full(
+        bar: &Bar<'bound>,
+    ) -> usize {
+        let major = Self::read_major(bar);
+
+        // Also important we specified the usize type above, otherwise the
+        // compiler complains about into() being unable to assume the type.
+        // Aka, the compiler does (eval -> usize).
+        // The following however is ok because the compiler knows the exact
+        // type into_raw() will leave us as.
+        // Aka, the compiler does (eval -> intermediary -> cast to usize).
+        let full = bar.read(registers::ID).into_raw() as usize;
+        pr_info!("Major bytes: {:#x}, Full read: {:#x}", major, full);
+
+        full
+    }
+    fn read_major(
+        bar: &Bar<'bound>,
+    ) -> usize {
+        // We can call our bar functions, and the register! macro has
+        // already mapped our specific bits into a way we can call too
+        let major: usize = bar.read(registers::ID).Major().into();
+
+        major
+    }
+
+    fn queue_factorial(
+        bar: &Bar<'bound>,
+        n: u32,
+    ) {
+      // The value to compute - we must convert our input to the register's
+        // own type (i.e. FACTORIAL). We MUST read first, because we always
+        // write the whole register
+        bar.write_reg(registers::FACTORIAL::from(n));
+        let status = bar.read(registers::STATUS);
+        //bar.write_reg(status.with_Compute(false));
+    }
+
+    fn poll_factorial(
+        bar: &Bar<'bound>,
+    ) {
+        let mut done = true;
+        while done {
+            done = bar.read(registers::STATUS).Compute().into();
+        }
+    }
+
+    fn poll_dma(
+        bar: &Bar<'bound>,
+    ) -> Result {
+        let mut done = true;
+        while done {
+            done = bar.try_read(registers::DMA_CMD)?.Start().into();
+        }
+        Ok(())
+    }
+}
+
+fn init_pdev<'bound>(
+    pdev: &'bound pci::Device<device::Core<'_>>,
+) {
+        pdev.enable_device_mem();
+        pdev.set_master();
+}
+
 impl pci::Driver for Edu {
     type IdInfo = ();
     type Data<'bound> = EduData<'bound>;
@@ -73,9 +141,7 @@ impl pci::Driver for Edu {
     ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
         pr_info!("Hello World!");
 
-        pdev.enable_device_mem();
-        pdev.set_master();
-
+        init_pdev(pdev);
         // This will fail (0 byte mask). This showcases how we can
         // handle an error and continue the function execution.
         let mask = kernel::dma::DmaMask::new::<0>();
@@ -84,30 +150,12 @@ impl pci::Driver for Edu {
         };
         let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
 
-        // We can call our bar functions, and the register! macro has
-        // already mapped our specific bits into a way we can call too
-        let major: usize = bar.read(registers::ID).Major().into();
+        // Because we want the function to tied to an EduData object
+        let full = EduData::read_full(&bar);
 
-        // Also important we specified the usize type above, otherwise the
-        // compiler complains about into() being unable to assume the type.
-        // Aka, the compiler does (eval -> usize).
-        // The following however is ok because the compiler knows the exact
-        // type into_raw() will leave us as.
-        // Aka, the compiler does (eval -> intermediary -> cast to usize).
-        let full = bar.read(registers::ID).into_raw() as usize;
-        pr_info!("Major bytes: {:#x}, Full read: {:#x}", major, full);
-
-        // The value to compute - we must convert our input to the register's
-        // own type (i.e. FACTORIAL). We MUST read first, because we always
-        // write the whole register
-        bar.write_reg(registers::FACTORIAL::from(10));
-        let status = bar.read(registers::STATUS);
-        //bar.write_reg(status.with_Compute(false));
-
-        let mut done = true;
-        while done {
-            done = bar.read(registers::STATUS).Compute().into();
-        }
+        let fac = 10;
+        EduData::queue_factorial(&bar, fac);
+        EduData::poll_factorial(&bar);
 
         // DMA test
         // Depending on how many bits the device supports, we allocate
@@ -165,10 +213,8 @@ impl pci::Driver for Edu {
         bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(false));
 
         // Poll until start bit is cleared
-        let mut done = true;
-        while done {
-            done = bar.try_read(registers::DMA_CMD)?.Start().into();
-        }
+        // We don't actually care about the error value yet
+        let _ = EduData::poll_dma(&bar);
 
         // Now take that data into our destination page and check it
         let pad = unsafe { bindings::page_to_phys(dma_dst.as_ptr()) };
