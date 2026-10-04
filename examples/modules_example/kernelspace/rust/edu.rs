@@ -28,6 +28,10 @@ mod registers;
 
 const VENDOR : pci::Vendor = unsafe { core::mem::transmute::<u16, pci::Vendor>(0x1234) };
 const DEVICE : u32 = 0x11e8;
+const BAR_SIZE : usize = 0xA0;
+
+// define a type for our specific bar so the compiler has guarantees
+type Bar<'bound> = pci::Bar<'bound, BAR_SIZE>;
 
 module_pci_driver! {
     type: Edu,
@@ -55,6 +59,7 @@ struct EduData<'bound> {
     // Ensure the page exists for the life of the module
     dma_src: Page,
     dma_dst: Page,
+    bar: Bar<'bound>,
 }
 
 impl pci::Driver for Edu {
@@ -77,7 +82,7 @@ impl pci::Driver for Edu {
         unsafe { kernel::dma::Device::dma_set_mask_and_coherent(pdev,mask).unwrap_or_else(
             |e|{pr_info!("Expected failure: error {:?}\n", e)})
         };
-        let bar = pdev.iomap_region_sized::<0xA0>(0, c"educational")?;
+        let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
 
         // We can call our bar functions, and the register! macro has
         // already mapped our specific bits into a way we can call too
@@ -190,6 +195,7 @@ impl pci::Driver for Edu {
             pdev : pdev,
             dma_src: dma_src,
             dma_dst: dma_dst,
+            bar: bar,
         } )
     }
 }
