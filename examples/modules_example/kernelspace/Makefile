@@ -7,13 +7,15 @@
 #	- Expects "make modules" and "make modules_prepare" already done
 #D : Where the module.ko is copied to.  Typically the shared guest dir,
 #	relative to $(HOME)/testing/
+#OUT : The OUTput artifact. Use this to generate intermediary files.
 
 F = hello
 K = $(HOME)/testing/kernel/compiled
 D = $(HOME)/testing/mkosi.extra/modules
+OUT = .o
 #can be overwritten through the command line "F=modname"
 
-obj-m += $(F).o
+obj-m += $(F)$(OUT)
 #simply add more objects here to build more modules
 #for multi-file modules, simply 'chain' things:
 # ab-objs := a.o b.o = middle man object
