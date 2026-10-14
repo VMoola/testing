@@ -20,6 +20,7 @@ use kernel::{
     page::{
         Page,
     },
+    irq,
 };
 
 // Define a bunch of registers, similar to C includes
@@ -54,12 +55,19 @@ pci_device_table!(
     ]
     );
 
+struct EduIrq<'bound> {
+    bar: Bar<'bound>,
+    pad: usize,
+    dma_dst: Page,
+}
+
 struct EduData<'bound> {
     pdev: &'bound pci::Device,
     // Ensure the page exists for the life of the module
+    handler: Pin<KBox<irq::Registration<'bound, EduIrq<'bound>>>>,
+    // vec dropped after the handler
+    vec: KBox<pci::IrqVectorRegistration<'bound>>,
     dma_src: Page,
-    dma_dst: Page,
-    bar: Bar<'bound>,
 }
 
 impl<'bound> EduData<'bound> {
@@ -98,9 +106,10 @@ impl<'bound> EduData<'bound> {
       // The value to compute - we must convert our input to the register's
         // own type (i.e. FACTORIAL). We MUST read first, because we always
         // write the whole register
-        bar.write_reg(registers::FACTORIAL::from(n));
+
         let status = bar.read(registers::STATUS);
-        //bar.write_reg(status.with_Compute(false));
+        bar.write_reg(status.with_Interrupt(true));
+        bar.write_reg(registers::FACTORIAL::from(n));
     }
 
     fn poll_factorial(
@@ -108,6 +117,8 @@ impl<'bound> EduData<'bound> {
     ) {
         let mut done = true;
         while done {
+            //let val = bar.read(registers::ISR);
+            //pr_info!("{:?}", val.into_raw() as usize);
             done = bar.read(registers::STATUS).Compute().into();
         }
     }
@@ -117,9 +128,46 @@ impl<'bound> EduData<'bound> {
     ) -> Result {
         let mut done = true;
         while done {
+            //let val = bar.read(registers::ISR);
+            //pr_info!("{:?}", val.into_raw() as usize);
             done = bar.try_read(registers::DMA_CMD)?.Start().into();
         }
         Ok(())
+    }
+}
+
+// See the irq crate for type implementation details
+impl irq::Handler for EduIrq<'_> {
+    fn handle(&self) -> irq::IrqReturn {
+        let data = self.bar.read(registers::ISR).into_raw();
+
+        // No cleaner way since rust doesn't have a bit checker
+        if data & 1 != 0 {
+            // Factorial
+            pr_info!("Factorial Caught!\n");
+            // This read should really be done in the bottom half...
+            let message: usize = self.bar.read(registers::FACTORIAL).into_raw() as usize;
+            pr_info!("Output value {:?}\n", message);
+
+        }
+
+        if data & 256 != 0 {
+            // DMA
+            pr_info!("DMA Caught!\n");
+
+            let va = unsafe { bindings::page_address(self.dma_dst.as_ptr()) };
+            let mut val: usize = 0;
+            unsafe {
+                core::ptr::copy(va, &mut val as *mut usize
+                    as *mut c_void, size_of::<usize>());
+            };
+
+            pr_info!("Major data: {:#x}, read from the dma destination page with physical address {:#x}\n", val, self.pad as u64);
+        }
+
+        // Handled both types already
+        self.bar.write_reg(registers::ISR_ACK::from_raw(data));
+        irq::IrqReturn::Handled
     }
 }
 
@@ -150,14 +198,7 @@ impl pci::Driver for Edu {
         };
         let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
 
-        // Because we want the function to tied to an EduData object
-        let full = EduData::read_full(&bar);
-
-        let fac = 10;
-        EduData::queue_factorial(&bar, fac);
-        EduData::poll_factorial(&bar);
-
-        // DMA test
+        // DMA test - this needs to happen early so rust can organize the memory
         // Depending on how many bits the device supports, we allocate
         // from a region:
         // DMA : 0-16Mb | 24 bits
@@ -168,6 +209,33 @@ impl pci::Driver for Edu {
         // because it has a 1GB floor. x86_64 starts at 0.
         let dma_src = Page::alloc_page(GFP_KERNEL)?;
         let dma_dst = Page::alloc_page(GFP_KERNEL)?;
+        let pad = unsafe { bindings::page_to_phys(dma_dst.as_ptr()) } as usize;
+
+        // Setup the interrupts. This must happen before the device does work because
+        // MSI will only send on the completion.
+        // Allocate the vectors, default is empty, all is everything
+        // Rust has better ways to actually use these, but this is the nitty
+        // gritty dirty implementation
+
+        let vec_src = KBox::new(pdev.alloc_irq_vectors(1, 1, pci::IrqTypes::default().with(pci::IrqType::Msi))?, GFP_KERNEL)?;
+        let vec: &'bound pci::IrqVectorRegistration<'bound> = unsafe { &*(&*vec_src as *const _) };
+        // Attach a handler to the vector
+        let reg = unsafe { irq::Registration::new(vec.index(0)?.into(), irq::Flags::TRIGGER_NONE,
+                c"edu", Ok::<_, Error>(EduIrq { bar, pad, dma_dst })) };
+        let handler = KBox::pin_init(reg, GFP_KERNEL)?;
+
+        // Bar and dma_dst have been moved to EduIrq, so we need to get it again
+        // The handler method fetchs the handler associated with a registration
+        let bar = &handler.handler().bar;
+        let dma_dst = &handler.handler().dma_dst;
+
+        // Because we want the function to tied to an EduData object
+        let full = EduData::read_full(&bar);
+
+        let fac = 10;
+        EduData::queue_factorial(&bar, fac);
+        //EduData::poll_factorial(&bar);
+        // Commenting the above out makes the read racy, but its unused
 
         let message: usize = bar.read(registers::FACTORIAL).into_raw() as usize;
         // Assuming we've implemented "rust_helper_[fxn]", we can do this
@@ -198,7 +266,7 @@ impl pci::Driver for Edu {
                 data.assume_init()
             };
 
-        pr_info!("Hi! This is our major data, read from the backing page we stored it in {:#x}, and message: {:?}", val, data);
+        pr_info!("Hi! This is our major data, read from the backing page we stored it in {:#x}, and message: {:?}\n", val, data);
 
         let pas = unsafe { bindings::page_to_phys(dma_src.as_ptr()) };
         let dma_addr = 0x40000; // Device address in its physical map
@@ -210,38 +278,24 @@ impl pci::Driver for Edu {
         bar.try_write_reg(registers::DMA_SRC::from_raw(pas as u64));
         bar.try_write_reg(registers::DMA_DST::from_raw(dma_addr));
         bar.try_write_reg(registers::DMA_SIZE::from(8));
-        bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(false));
+        bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(false).with_Interrupt(false));
 
         // Poll until start bit is cleared
         // We don't actually care about the error value yet
         let _ = EduData::poll_dma(&bar);
 
         // Now take that data into our destination page and check it
-        let pad = unsafe { bindings::page_to_phys(dma_dst.as_ptr()) };
         bar.try_write_reg(registers::DMA_SRC::from_raw(dma_addr));
         bar.try_write_reg(registers::DMA_DST::from_raw(pad as u64));
         bar.try_write_reg(registers::DMA_SIZE::from(8));
-        bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(true));
+        bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(true).with_Interrupt(true));
 
-        let mut done = true;
-        while done {
-            done = bar.try_read(registers::DMA_CMD)?.Start().into();
-        }
-
-        let va = unsafe { bindings::page_address(dma_dst.as_ptr()) };
-        let mut val: usize = 0;
-        unsafe {
-            core::ptr::copy(va, &mut val as *mut usize
-                as *mut c_void, size_of::<usize>());
-        };
-
-        pr_info!("Major data: {:#x}, read from the dma destination page with physical address {:#x}\n", val, pad as u64);
-
+        pr_info!("Done with probe!\n");
         Ok(EduData {
             pdev : pdev,
             dma_src: dma_src,
-            dma_dst: dma_dst,
-            bar: bar,
+            handler: handler,
+            vec: vec_src,
         } )
     }
 }
