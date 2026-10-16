@@ -58,7 +58,9 @@ pci_device_table!(
 struct EduIrq<'bound> {
     bar: Bar<'bound>,
     pad: usize,
+    // So these values don't get dropped
     dma_dst: Page,
+    fxn: usize,
 }
 
 struct EduData<'bound> {
@@ -136,6 +138,14 @@ impl<'bound> EduData<'bound> {
     }
 }
 
+impl EduIrq<'_> {
+    // Must be a C function because the C API we call takes that type
+    unsafe extern "C" fn factorial_thread(data: *mut c_void) -> c_int {
+        pr_info!("Factorial deferred print!\n");
+        0
+    }
+}
+
 // See the irq crate for type implementation details
 impl irq::Handler for EduIrq<'_> {
     fn handle(&self) -> irq::IrqReturn {
@@ -149,6 +159,9 @@ impl irq::Handler for EduIrq<'_> {
             let message: usize = self.bar.read(registers::FACTORIAL).into_raw() as usize;
             pr_info!("Output value {:?}\n", message);
 
+            // Cast back. Inside our factorial since the kthread will complete
+            // so future wakeups will do nothing
+            unsafe { bindings::wake_up_process(self.fxn as *mut bindings::task_struct) };
         }
 
         if data & 256 != 0 {
@@ -198,6 +211,9 @@ impl pci::Driver for Edu {
         };
         let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
 
+        let task = unsafe {
+            bindings::kthread_create_on_node(Some(EduIrq::factorial_thread), core::ptr::null_mut(), bindings::NUMA_NO_NODE, c"hello".as_ptr())
+        };
         // DMA test - this needs to happen early so rust can organize the memory
         // Depending on how many bits the device supports, we allocate
         // from a region:
@@ -221,7 +237,7 @@ impl pci::Driver for Edu {
         let vec: &'bound pci::IrqVectorRegistration<'bound> = unsafe { &*(&*vec_src as *const _) };
         // Attach a handler to the vector
         let reg = unsafe { irq::Registration::new(vec.index(0)?.into(), irq::Flags::TRIGGER_NONE,
-                c"edu", Ok::<_, Error>(EduIrq { bar, pad, dma_dst })) };
+                c"edu", Ok::<_, Error>(EduIrq { bar, pad, dma_dst, fxn: task as usize })) };
         let handler = KBox::pin_init(reg, GFP_KERNEL)?;
 
         // Bar and dma_dst have been moved to EduIrq, so we need to get it again
