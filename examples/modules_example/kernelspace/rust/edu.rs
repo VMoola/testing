@@ -50,6 +50,7 @@ const DRV: bindings::drm_driver = bindings::drm_driver {
 const FOPS: bindings::file_operations = bindings::file_operations {
     open: Some(open),
     release: Some(close),
+    mmap: Some(mmap),
     ..unsafe { core::mem::zeroed() }
 };
 
@@ -368,7 +369,9 @@ impl Drop for EduData<'_> {
 // make it accessible via the file descriptor private data.
 unsafe extern "C" fn open(inode: *mut bindings::inode, filp: *mut bindings::file) -> c_int {
     let data = Page::alloc_page(GFP_KERNEL).unwrap();
+    let message: u64 = 777;
 
+    unsafe { data.write_raw(&message as *const u64 as *const u8, 0, 8) };
     let client = EduClient { data: data, _bound: core::marker::PhantomData };
 
     // cast() vs as are virtually the same, cast() is just more restrictive
@@ -387,6 +390,16 @@ unsafe extern "C" fn close(inode: *mut bindings::inode, filp: *mut bindings::fil
     // This 'consumes' our heap resource and lets rust handle the dropping
     // KBox's drop first, then each of its members (EduClient)
     unsafe { KBox::from_raw(filep) };
+    0
+}
+
+unsafe extern "C" fn mmap(file: *mut bindings::file, vma: *mut bindings::vm_area_struct) -> c_int {
+    // We need to handhold the compiler to acquire our desired type
+    // This line is "access private as a pointer storing an EduClient"
+    let client = unsafe { &*((*file).private_data as *const EduClient<'_>)};
+
+    // ugly because the vma bindgen is weird
+    unsafe { bindings::vm_insert_page(vma, (*vma).__bindgen_anon_1.__bindgen_anon_1.vm_start, client.data.as_ptr()) };
     0
 }
 
