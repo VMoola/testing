@@ -273,6 +273,7 @@ impl pci::Driver for Edu {
         // Bar and dma_dst have been moved to EduIrq, so we need to get it again
         // The handler method fetchs the handler associated with a registration
         let bar = &handler.handler().bar;
+        unsafe { BAR = bar as *const _ as usize };
         let dma_dst = &handler.handler().dma_dst;
 
         // Because we want the function to tied to an EduData object
@@ -374,6 +375,10 @@ unsafe extern "C" fn open(inode: *mut bindings::inode, filp: *mut bindings::file
     unsafe { data.write_raw(&message as *const u64 as *const u8, 0, 8) };
     let client = EduClient { data: data, _bound: core::marker::PhantomData };
 
+    // Just showcasing that we can calculate the bar since we stored it.
+    // This should be safe as well, since its inside a pinned KBox
+    EduData::queue_factorial(unsafe { &*(BAR as *const Bar<'_>) } , 5);
+
     // cast() vs as are virtually the same, cast() is just more restrictive
     let filep: *mut c_void = KBox::into_raw(KBox::new(client, GFP_KERNEL).unwrap()).cast();
 
@@ -402,6 +407,8 @@ unsafe extern "C" fn mmap(file: *mut bindings::file, vma: *mut bindings::vm_area
     unsafe { bindings::vm_insert_page(vma, (*vma).__bindgen_anon_1.__bindgen_anon_1.vm_start, client.data.as_ptr()) };
     0
 }
+
+static mut BAR: usize = 0;
 
 fn test(
 ) {
