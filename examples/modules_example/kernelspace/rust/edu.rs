@@ -34,6 +34,18 @@ const BAR_SIZE : usize = 0xA0;
 // define a type for our specific bar so the compiler has guarantees
 type Bar<'bound> = pci::Bar<'bound, BAR_SIZE>;
 
+// The important part here is this structure's address mut not move
+// after handing it to drm via drm_dev_alloc()
+const DRV: bindings::drm_driver = bindings::drm_driver {
+    name: c"mydrm".as_ptr().cast_mut().cast(),
+    desc: c"mydrm".as_ptr().cast_mut().cast(),
+    // The default path is /dev/dri/cardN. Lets use ACCEL if we have it
+    #[cfg(CONFIG_DRM_ACCEL)]
+    driver_features: bindings::drm_driver_feature_DRIVER_COMPUTE_ACCEL,
+    // Tell rust to make the rest of the fields 0
+    ..unsafe { core::mem::zeroed() }
+};
+
 module_pci_driver! {
     type: Edu,
     name: "Edu",
@@ -70,6 +82,9 @@ struct EduData<'bound> {
     // vec dropped after the handler
     vec: KBox<pci::IrqVectorRegistration<'bound>>,
     dma_src: Page,
+    // Store device as a usize to avoid compiler
+    // We could get around this 'cleaner' by implementing Send/Sync instead
+    device: usize,
 }
 
 impl<'bound> EduData<'bound> {
@@ -212,7 +227,7 @@ impl pci::Driver for Edu {
         let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
 
         let task = unsafe {
-            bindings::kthread_create_on_node(Some(EduIrq::factorial_thread), core::ptr::null_mut(), bindings::NUMA_NO_NODE, c"hello".as_ptr())
+            bindings::kthread_create_on_node(Some(EduIrq::factorial_thread), core::ptr::null_mut(), bindings::NUMA_NO_NODE, c"hello".as_ptr() as *const u8)
         };
         // DMA test - this needs to happen early so rust can organize the memory
         // Depending on how many bits the device supports, we allocate
@@ -306,13 +321,31 @@ impl pci::Driver for Edu {
         bar.try_write_reg(registers::DMA_SIZE::from(8));
         bar.try_write_reg(registers::DMA_CMD::from_raw(0).with_Start(true).with_Direction(true).with_Interrupt(true));
 
+        // Allocate and register the device
+        let parent = pdev.as_ref() as *const _ as *mut bindings::device;
+        let device = unsafe { bindings::drm_dev_alloc(&DRV, parent) };
+        unsafe { bindings::drm_dev_register(device, 0) };
+
         pr_info!("Done with probe!\n");
         Ok(EduData {
             pdev : pdev,
             dma_src: dma_src,
             handler: handler,
             vec: vec_src,
+            device: device as usize,
         } )
+    }
+}
+
+impl Drop for EduData<'_> {
+    fn drop(
+        &mut self,
+    ) {
+        // Have to cleanup our drm data here because we allocated
+        // with the direct C bindings
+        let device = self.device as *mut bindings::drm_device;
+        unsafe { bindings::drm_dev_unregister(device) };
+        unsafe { bindings::drm_dev_put(device) };
     }
 }
 
