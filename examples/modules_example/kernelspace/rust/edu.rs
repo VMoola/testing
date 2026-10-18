@@ -39,10 +39,17 @@ type Bar<'bound> = pci::Bar<'bound, BAR_SIZE>;
 const DRV: bindings::drm_driver = bindings::drm_driver {
     name: c"mydrm".as_ptr().cast_mut().cast(),
     desc: c"mydrm".as_ptr().cast_mut().cast(),
+    fops: &FOPS,
     // The default path is /dev/dri/cardN. Lets use ACCEL if we have it
     #[cfg(CONFIG_DRM_ACCEL)]
     driver_features: bindings::drm_driver_feature_DRIVER_COMPUTE_ACCEL,
     // Tell rust to make the rest of the fields 0
+    ..unsafe { core::mem::zeroed() }
+};
+
+const FOPS: bindings::file_operations = bindings::file_operations {
+    open: Some(open),
+    release: Some(close),
     ..unsafe { core::mem::zeroed() }
 };
 
@@ -85,6 +92,13 @@ struct EduData<'bound> {
     // Store device as a usize to avoid compiler
     // We could get around this 'cleaner' by implementing Send/Sync instead
     device: usize,
+}
+
+// Distinctly different lifetime, this is per-open
+struct EduClient<'client> {
+    data: Page,
+    // PhantomData ensures we can bound the lifetime
+    _bound: core::marker::PhantomData<&'client ()>,
 }
 
 impl<'bound> EduData<'bound> {
@@ -347,6 +361,33 @@ impl Drop for EduData<'_> {
         unsafe { bindings::drm_dev_unregister(device) };
         unsafe { bindings::drm_dev_put(device) };
     }
+}
+
+// Conceptually, since each 'open' is a client instance, we should
+// generate a new structure to represent it, put it on the heap, and
+// make it accessible via the file descriptor private data.
+unsafe extern "C" fn open(inode: *mut bindings::inode, filp: *mut bindings::file) -> c_int {
+    let data = Page::alloc_page(GFP_KERNEL).unwrap();
+
+    let client = EduClient { data: data, _bound: core::marker::PhantomData };
+
+    // cast() vs as are virtually the same, cast() is just more restrictive
+    let filep: *mut c_void = KBox::into_raw(KBox::new(client, GFP_KERNEL).unwrap()).cast();
+
+    unsafe { (*filp).private_data = filep };
+    pr_info!("Ready for the mmap!\n");
+    0
+}
+
+// Reassociate our stuff with Rust, let rust handle the actual dropping
+unsafe extern "C" fn close(inode: *mut bindings::inode, filp: *mut bindings::file) -> c_int {
+    let filep = unsafe { (*filp).private_data };
+
+    pr_info!("Freeing descriptor\n");
+    // This 'consumes' our heap resource and lets rust handle the dropping
+    // KBox's drop first, then each of its members (EduClient)
+    unsafe { KBox::from_raw(filep) };
+    0
 }
 
 fn test(
