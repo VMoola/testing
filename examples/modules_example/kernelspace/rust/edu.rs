@@ -240,6 +240,7 @@ impl pci::Driver for Edu {
             |e|{pr_info!("Expected failure: error {:?}\n", e)})
         };
         let bar = pdev.iomap_region_sized::<BAR_SIZE>(0, c"educational")?;
+        unsafe { BAR_START = (*(pdev as *const _ as *const bindings::pci_dev)).resource[0].start};
 
         let task = unsafe {
             bindings::kthread_create_on_node(Some(EduIrq::factorial_thread), core::ptr::null_mut(), bindings::NUMA_NO_NODE, c"hello".as_ptr() as *const u8)
@@ -377,7 +378,7 @@ unsafe extern "C" fn open(inode: *mut bindings::inode, filp: *mut bindings::file
 
     // Just showcasing that we can calculate the bar since we stored it.
     // This should be safe as well, since its inside a pinned KBox
-    EduData::queue_factorial(unsafe { &*(BAR as *const Bar<'_>) } , 5);
+    //EduData::queue_factorial(unsafe { &*(BAR as *const Bar<'_>) } , 5);
 
     // cast() vs as are virtually the same, cast() is just more restrictive
     let filep: *mut c_void = KBox::into_raw(KBox::new(client, GFP_KERNEL).unwrap()).cast();
@@ -405,10 +406,14 @@ unsafe extern "C" fn mmap(file: *mut bindings::file, vma: *mut bindings::vm_area
 
     // ugly because the vma bindgen is weird
     unsafe { bindings::vm_insert_page(vma, (*vma).__bindgen_anon_1.__bindgen_anon_1.vm_start, client.data.as_ptr()) };
+
+    unsafe { bindings::vmf_insert_mixed(vma, (*vma).__bindgen_anon_1.__bindgen_anon_1.vm_start + bindings::PAGE_SIZE, (BAR_START >> kernel::page::PAGE_SHIFT) as usize); }
+
     0
 }
 
 static mut BAR: usize = 0;
+static mut BAR_START: u64 = 0;
 
 fn test(
 ) {

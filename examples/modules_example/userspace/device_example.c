@@ -14,6 +14,11 @@
 
 static int fd;
 
+static inline void write_register(void *base, unsigned long offset,
+			unsigned long value, unsigned long width) {
+	memcpy(base + offset, &value, width >> 3);
+}
+
 /*
  * A demo function. This depends on the mmap call mapping a
  * page into userspace so that we can write to it. Every time
@@ -36,6 +41,10 @@ static int mmap_example(int message)
 
 	//read what has been stored for us
 	memcpy(buf, x, 8);
+
+	// Write the interrupt and value for factorial
+	//write_register(x + 4096, 0x20, 0x80, 32);
+	//write_register(x + 4096, 0x08, message, 32); // 7! = 5040
 
 	//write our message
 	memcpy(x, &message, sizeof(message));
