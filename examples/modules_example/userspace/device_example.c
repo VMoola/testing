@@ -23,7 +23,7 @@ static int fd;
  * We might still have stale data left; this example doesn't
  * do any clearing.
  */
-static int mmap_example(char *message)
+static int mmap_example(int message)
 {
 	//mmap example below
 	char buf[8];
@@ -36,11 +36,13 @@ static int mmap_example(char *message)
 
 	//read what has been stored for us
 	memcpy(buf, x, 8);
+
 	//write our message
-	memcpy(x, message, strlen(message));
+	memcpy(x, &message, sizeof(message));
 
 	munmap(x, len); //no munmap definition, we have to fold it into release
-	printf("message from last call:%s\n", buf);
+	printf("message from last call:%d\n", *(int *)buf);
+
 	return 0;
 }
 
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
 		printf("Output value from ioctl %d\n", val);
 	}
 
-	mmap_example(mmap_message);
+	mmap_example(atoi(mmap_message));
 	close(fd); //calls release
 	return 0;
 }
