@@ -55,10 +55,21 @@ static int mmap_example(int message)
 	return 0;
 }
 
+/*
+ * Takes command line arguments:
+ * 0 - binary path
+ * 1 - device path
+ * 2 - ioctl (0 is skip)
+ * 3 - ioctl args (if skipped, does nothing but print)
+ * 4 - mmap message (an integer)
+ */
+
 int main(int argc, char *argv[])
 {
 	if (argc == 1) {
-		printf("No device specified\n");
+		printf("Pass in valid arguments\n1 - device path\n"
+				"2 - ioctl (0 is skip)\n3 - ioctl args\n"
+				"4 - mmap message (int)\n");
 		return -1;
 	}
 
