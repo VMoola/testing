@@ -1,0 +1,35 @@
+#! /bin/bash
+TESTING_REPO=~/testing
+
+source $TESTING_REPO/examples/example_scripts/host/load_config
+
+# This is paired with the ssh networking in QEMU
+#1 - log onto the guest
+#2 - mount the shared directory
+#3 - run the "example_ssh_setup" script
+
+# p - port
+OPTSTRING="p:u:s:d:h"
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		p)
+			PORT=${OPTARG}
+			;;
+		u)
+			USER=${OPTARG}
+			;;
+		s)
+			SRC=${OPTARG}
+			;;
+		d)
+			DST=${OPTARG}
+			;;
+		h)
+			printf "p : Port\nu : Add custom parameters\ns : source file\nd : destination"
+			echo "See file for more details"
+			exit
+			;;
+	esac
+done
+
+scp -P$PORT -o StrictHostKeyChecking=no $USER $SRC $DST
