@@ -1,0 +1,33 @@
+#!/bin/bash
+# Temporarily hand the NVIDIA GPU to vfio-pci so qemu_test can pass it through.
+# Nothing persists across a reboot. To give the GPU back to the host, reboot:
+# rebinding it at runtime makes the desktop grab it and can freeze the display.
+#
+# Usage: vfio_bind
+
+# Every device in the IOMMU group must be listed here
+readonly DEVICES="0000:01:00.0 0000:01:00.1"
+readonly VFIO_DRIVER="vfio-pci"
+readonly MEMLOCK_LIMIT="unlimited"
+readonly PCI_SYSFS="/sys/bus/pci"
+readonly VFIO_DEV="/dev/vfio"
+
+sudo modprobe $VFIO_DRIVER || exit 1
+
+for dev in $DEVICES; do
+	echo $VFIO_DRIVER | sudo tee $PCI_SYSFS/devices/$dev/driver_override > /dev/null
+	if [ -e $PCI_SYSFS/devices/$dev/driver ]; then
+		echo $dev | sudo tee $PCI_SYSFS/devices/$dev/driver/unbind > /dev/null
+	fi
+	echo $dev | sudo tee $PCI_SYSFS/drivers_probe > /dev/null
+	lspci -nnk -s $dev
+done
+
+for dev in $DEVICES; do
+	group=$(basename $(readlink $PCI_SYSFS/devices/$dev/iommu_group))
+	sudo chown $USER $VFIO_DEV/$group
+done
+echo "IOMMU group $group is now usable by $USER"
+
+# QEMU pins all guest RAM, so lift the memlock limit of the calling shell
+sudo prlimit --memlock=$MEMLOCK_LIMIT --pid $PPID
