@@ -12,6 +12,14 @@ readonly MEMLOCK_LIMIT="unlimited"
 readonly PCI_SYSFS="/sys/bus/pci"
 readonly VFIO_DEV="/dev/vfio"
 
+# Refuse to split an IOMMU group between the host and guests
+for dev in $DEVICES; do
+	for d in $PCI_SYSFS/devices/$dev/iommu_group/devices/*; do
+		[[ $(cat $d/class) == 0x0604* ]] && continue   # bridges can stay on the host
+		[[ " $DEVICES " == *" ${d##*/} "* ]] || { echo "${d##*/} shares an IOMMU group with $dev, add it to DEVICES"; exit 1; }
+	done
+done
+
 sudo modprobe $VFIO_DRIVER || exit 1
 
 for dev in $DEVICES; do
