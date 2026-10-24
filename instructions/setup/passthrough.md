@@ -19,6 +19,25 @@ Essentially, just bind our io device to the vfio-pci driver, and tell our
 shell to use as much memory as it needs to expose it. Then, hand our addresses
 to QEMU as devices to attach, and we can see them on our guest.
 
+# Graphics Handoffs
+
+Handing away our device while we're using it to render our display obviously
+doesn't work. To get around this, we can make use of the virtual terminals.
+
+Firstly, ensure our iGPU is enabled. This is BIOS dependent. Linux uses that
+for rendering the text-only virtual terminals.
+
+Now, switch to one of those text-only terminals (`Ctrl + Alt + Fn[N]`) so
+its safe to do the [handoff](/examples/example_scripts/host/gpu_mode).
+
+```
+gpu_mode {host, vm}
+
+# if vm
+vfio_bind
+~/testing/qemu_test
+```
+
 # Drivers
 
 As an example, nova-core is for nvidia gpus. Drivers always search the

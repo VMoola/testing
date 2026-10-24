@@ -1,7 +1,7 @@
 #!/bin/bash
 # Temporarily hand the NVIDIA GPU to vfio-pci so qemu_test can pass it through.
-# Nothing persists across a reboot. To give the GPU back to the host, reboot:
-# rebinding it at runtime makes the desktop grab it and can freeze the display.
+# Run it after "gpu_mode vm", from the terminal you start QEMU in. Nothing
+# persists across a reboot; "gpu_mode host" gives the GPU back to the host.
 #
 # Usage: vfio_bind
 

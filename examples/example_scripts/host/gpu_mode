@@ -1,0 +1,91 @@
+#!/bin/bash
+# Switch the NVIDIA GPU between the host desktop and guests.
+# This restarts the desktop, so run it from a text console (Ctrl+Alt+F3) or
+# over ssh, never from a terminal inside the desktop.
+#
+# "vm" only takes the GPU off the host and reserves it for vfio-pci. Run
+# vfio_bind afterwards from the terminal you start QEMU in, since it also
+# raises that shell's memlock limit.
+#
+# Usage: gpu_mode host|vm
+
+readonly NVIDIA_DRIVER="nvidia"
+readonly NVIDIA_MODULES="nvidia_drm nvidia_modeset nvidia_uvm nvidia"
+readonly DISPLAY_MANAGER="gdm"
+readonly PERSISTENCED="nvidia-persistenced"
+readonly VFIO_DRIVER="vfio-pci"
+readonly PCI_SYSFS="/sys/bus/pci"
+
+if [ "$1" != "host" ] && [ "$1" != "vm" ]; then
+	echo "Usage: gpu_mode host|vm"
+	exit 1
+fi
+
+# Devices the host driver owns; none means the GPU is off the host
+host_devices=$(ls $PCI_SYSFS/drivers/$NVIDIA_DRIVER 2>/dev/null | grep '^0000:')
+# Devices reserved for guests, whether or not vfio_bind has bound them yet
+guest_devices=$(grep -lx $VFIO_DRIVER $PCI_SYSFS/devices/*/driver_override 2>/dev/null | cut -d/ -f6)
+
+if [ "$1" = "host" ] && [ -n "$host_devices" ] && [ -z "$guest_devices" ]; then
+	echo "GPU is already on the host"
+	exit 0
+fi
+if [ "$1" = "vm" ] && [ -z "$host_devices" ]; then
+	echo "GPU is already off the host"
+	exit 0
+fi
+
+# A guest keeps its devices enabled while running, and unbinding one would
+# block until the guest exits
+if [ "$1" = "host" ]; then
+	for dev in $guest_devices; do
+		if [ "$(cat $PCI_SYSFS/devices/$dev/enable)" != 0 ]; then
+			echo "A guest is still using $dev, shut it down first"
+			exit 1
+		fi
+	done
+fi
+
+# Only text consoles and ssh survive stopping the desktop
+if [[ $(tty) != /dev/tty[0-9]* ]] && [ -z "$SSH_CONNECTION" ]; then
+	echo "Run this from a text console or ssh (not tmux): it stops the desktop it runs in"
+	exit 1
+fi
+
+# Bring the desktop back up on our new gpu regardless of what happens next
+trap 'sudo systemctl start $DISPLAY_MANAGER' EXIT
+
+sudo systemctl stop $DISPLAY_MANAGER
+
+case "$1" in
+vm)
+	sudo systemctl stop $PERSISTENCED
+	if fuser -s /dev/nvidia*; then
+		echo "Something still has the GPU open, leaving it on the host:"
+		fuser -v /dev/nvidia*
+		exit 1
+	fi
+	sudo modprobe -r $NVIDIA_MODULES || exit 1
+	# Stop anything (e.g. a CUDA app loading nvidia) reclaiming it before vfio_bind
+	for dev in $host_devices; do
+		echo $VFIO_DRIVER | sudo tee $PCI_SYSFS/devices/$dev/driver_override > /dev/null
+	done
+	echo "GPU is off the host. Run vfio_bind from the terminal you start QEMU in."
+	;;
+host)
+	for dev in $guest_devices; do
+		echo "" | sudo tee $PCI_SYSFS/devices/$dev/driver_override > /dev/null
+		if [ -e $PCI_SYSFS/devices/$dev/driver ]; then
+			echo $dev | sudo tee $PCI_SYSFS/devices/$dev/driver/unbind > /dev/null
+		fi
+	done
+	sudo modprobe -a $NVIDIA_MODULES || exit 1
+	for dev in $guest_devices; do
+		echo $dev | sudo tee $PCI_SYSFS/drivers_probe > /dev/null
+		lspci -nnk -s $dev
+	done
+	if systemctl -q is-enabled $PERSISTENCED; then
+		sudo systemctl start $PERSISTENCED
+	fi
+	;;
+esac
