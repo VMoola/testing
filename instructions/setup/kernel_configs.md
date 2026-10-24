@@ -76,3 +76,13 @@ DEBUG_INFO_REDUCED=n - Ensures that we have the full debug symbols
 For proper debugging, all we need is the vmlinux and the bzImage.
 bzImage boots the kernel, while the vmlinux has all the linkage +
 instructions.
+
+# Driver functionality
+Each driver has a subsystem it registers to. Typically, both the
+subsystem and driver have to be enabled for code compiled in.
+
+```
+CONFIG_DRM
+CONFIG_DRM_ACCEL
+CONFIG_NOVA_CORE
+```
