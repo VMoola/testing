@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	char *mmap_message;
+	char *mmap_message = "0";
 	char *device = argv[1];
 	unsigned int io = 0;
 	if (argv[2] != NULL) {
