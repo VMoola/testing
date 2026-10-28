@@ -1,4 +1,6 @@
 kernel::register! {
+        base: kernel::io::Region<0xA0>;
+
         pub(super) ID(u32) @ 0x0 {
             31:24 Major;
             23:16 Minor;

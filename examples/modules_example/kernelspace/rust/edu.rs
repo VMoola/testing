@@ -264,7 +264,7 @@ impl pci::Driver for Edu {
         // Rust has better ways to actually use these, but this is the nitty
         // gritty dirty implementation
 
-        let vec_src = KBox::new(pdev.alloc_irq_vectors(1, 1, pci::IrqTypes::default().with(pci::IrqType::Msi))?, GFP_KERNEL)?;
+        let vec_src = KBox::new(pdev.alloc_irq_vectors(1, 1, pci::IrqTypes::default() | (pci::IrqType::Msi))?, GFP_KERNEL)?;
         let vec: &'bound pci::IrqVectorRegistration<'bound> = unsafe { &*(&*vec_src as *const _) };
         // Attach a handler to the vector
         let reg = unsafe { irq::Registration::new(vec.index(0)?.into(), irq::Flags::TRIGGER_NONE,
