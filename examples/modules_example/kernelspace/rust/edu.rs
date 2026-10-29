@@ -21,6 +21,7 @@ use kernel::{
         Page,
     },
     irq,
+    drm,
 };
 
 // Define a bunch of registers, similar to C includes
@@ -54,6 +55,60 @@ const FOPS: bindings::file_operations = bindings::file_operations {
     ..unsafe { core::mem::zeroed() }
 };
 
+// The proper rust way
+const DR: drm::DriverInfo = drm::DriverInfo {
+    major: 0,
+    minor: 0,
+    patchlevel: 0,
+    name: c"Edu Drm Driver registration",
+    desc: c"Educational example driver",
+};
+
+// The following is required by the compiler for drm::Driver (impl AllocImpl)
+struct EduObject;
+
+impl drm::gem::DriverObject for EduObject {
+    type Driver = EduDriverData;
+    type Args = ();
+
+    fn new(
+        _dev: &drm::Device<Self::Driver>,
+        _size: usize,
+        _args: Self::Args,
+    ) -> impl PinInit<Self, Error> {
+        Ok::<_, Error>(EduObject)
+    }
+}
+
+// We need a different fileops for rust, adhering to the trait
+impl drm::file::DriverFile for EduClient<'_> {
+    type Driver = EduDriverData;
+
+    fn open(_dev: &drm::Device<Self::Driver>) -> Result<Pin<KBox<Self>>> {
+        pr_info!("You have opened Rust's file descriptor registration\n");
+        let data = Page::alloc_page(GFP_KERNEL)?;
+        let message: u64 = 777;
+
+        //unsafe { data.write_raw(&message as *const u64 as *const u8, 0, 8) };
+        Ok(KBox::pin(EduClient { data, _bound:core::marker::PhantomData }, GFP_KERNEL)?)
+    }
+}
+
+struct EduDriverData;
+
+#[vtable]
+impl drm::Driver for EduDriverData {
+    type Data = ();
+    type RegistrationData<'a> = ();
+    type Object = drm::gem::Object<EduObject>;
+    type ParentDevice<Ctx: device::DeviceContext> = pci::Device<Ctx>;
+    type File = EduClient<'static>;
+
+    const IOCTLS: &'static [drm::ioctl::DrmIoctlDescriptor] = &[];
+    const INFO: drm::DriverInfo = DR;
+    const FEAT_ACCEL: bool = true;
+}
+
 module_pci_driver! {
     type: Edu,
     name: "Edu",
@@ -85,6 +140,7 @@ struct EduIrq<'bound> {
 
 struct EduData<'bound> {
     pdev: &'bound pci::Device,
+    _reg: Pin<KBox<drm::Registration<'bound, EduDriverData>>>,
     // Ensure the page exists for the life of the module
     handler: Pin<KBox<irq::Registration<'bound, EduIrq<'bound>>>>,
     // vec dropped after the handler
@@ -343,9 +399,14 @@ impl pci::Driver for Edu {
         let device = unsafe { bindings::drm_dev_alloc(&DRV, parent) };
         unsafe { bindings::drm_dev_register(device, 0) };
 
+        let drm = drm::UnregisteredDevice::<EduDriverData>::new(pdev, Ok::<_, Error>(()))?;
+        let reg = unsafe { drm::Registration::new(pdev.as_ref(), drm, Ok::<_, Error>(()))};
+        let reg = KBox::pin_init(reg, GFP_KERNEL)?;
+
         pr_info!("Done with probe!\n");
         Ok(EduData {
             pdev : pdev,
+            _reg : reg,
             dma_src: dma_src,
             handler: handler,
             vec: vec_src,
