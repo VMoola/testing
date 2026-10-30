@@ -48,10 +48,15 @@ const DRV: bindings::drm_driver = bindings::drm_driver {
     ..unsafe { core::mem::zeroed() }
 };
 
+extern "C" {
+    static __this_module: bindings::module;
+}
+
 const FOPS: bindings::file_operations = bindings::file_operations {
     open: Some(open),
     release: Some(close),
     mmap: Some(mmap),
+    owner: unsafe { &raw const __this_module }.cast_mut(),
     ..unsafe { core::mem::zeroed() }
 };
 
