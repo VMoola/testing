@@ -72,6 +72,14 @@ const DR: drm::DriverInfo = drm::DriverInfo {
 // The following is required by the compiler for drm::Driver (impl AllocImpl)
 struct EduObject;
 
+// ioctls for GEM. There's no reason to go around it for GEM.
+const EDU_IOCTLS: [drm::ioctl::DrmIoctlDescriptor; 1] = [drm::ioctl::DrmIoctlDescriptor {
+    cmd: drm::ioctl::IOWR::<u64>(kernel::uapi::DRM_COMMAND_BASE),
+    func: Some(create_obj),
+    flags: 0,
+    name: c"EDU_CREATE_OBJ".as_ptr().cast(),
+}];
+
 impl drm::gem::DriverObject for EduObject {
     type Driver = EduDriverData;
     type Args = ();
@@ -109,9 +117,37 @@ impl drm::Driver for EduDriverData {
     type ParentDevice<Ctx: device::DeviceContext> = pci::Device<Ctx>;
     type File = EduClient<'static>;
 
-    const IOCTLS: &'static [drm::ioctl::DrmIoctlDescriptor] = &[];
+    const IOCTLS: &'static [drm::ioctl::DrmIoctlDescriptor] = &EDU_IOCTLS;
     const INFO: drm::DriverInfo = DR;
     const FEAT_ACCEL: bool = true;
+}
+
+unsafe extern "C" fn create_obj(
+    raw_dev: *mut bindings::drm_device,
+    raw_data: *mut c_void,
+    raw_file: *mut bindings::drm_file,
+) -> c_int {
+    use kernel::drm::gem::BaseObject;
+
+    let dev = unsafe { drm::Device::<EduDriverData>::from_raw(raw_dev) };
+    let file = unsafe { drm::File::<EduClient<'static>>::from_raw(raw_file) };
+
+    let obj = match drm::gem::Object::<EduObject>::new(dev, 3 * kernel::page::PAGE_SIZE, ()) {
+        Ok(obj) => obj,
+        Err(e) => return e.to_errno(),
+    };
+
+    // The handle holds a reference so the object outlives this function
+    if let Err(e) = obj.create_handle(file) {
+        return e.to_errno();
+    }
+    match obj.create_mmap_offset() {
+        Ok(offset) => {
+            unsafe { *raw_data.cast::<u64>() = offset };
+            0
+        }
+        Err(e) => e.to_errno(),
+    }
 }
 
 module_pci_driver! {
