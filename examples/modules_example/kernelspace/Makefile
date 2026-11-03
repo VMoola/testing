@@ -25,7 +25,7 @@ obj-m += $(F)$(OUT)
 #it's likely better to write a script so its all cleanly
 #moved to the shared mount directory, or modify the cp command below
 PWD := $(CURDIR)
-TARGET := $(D)/$(F)
+TARGET := $(D)/$(notdir $(F))
 
 export KBUILD_EXTMOD = $(PWD)
 export KBUILD_EXTMOD_OUTPUT = $(PWD)
