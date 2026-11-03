@@ -56,6 +56,42 @@ static int mmap_example(int message)
 }
 
 /*
+ * Accel version of mmap_example. Asks the driver to create a GEM
+ * object via ioctl, then mmaps it using the returned offset.
+ */
+static int gem_mmap_example(int message)
+{
+	char buf[8];
+	int len = 10000;
+	unsigned long offset = 0;
+
+	// DRM_IOWR(DRM_COMMAND_BASE, __u64)
+	if (ioctl(fd, _IOWR('d', 0x40, unsigned long), &offset)) {
+		printf("gem create ioctl dead\n");
+		return -1;
+	}
+
+	char *x = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
+	if (x == MAP_FAILED) {
+		printf("gem mmap dead\n");
+		return -1;
+	}
+
+	memcpy(buf, x, 8);
+
+	// Write the interrupt and value for factorial
+	//write_register(x + 4096, 0x20, 0x80, 32);
+	//write_register(x + 4096, 0x08, message, 32); // 7! = 5040
+
+	memcpy(x, &message, sizeof(message));
+
+	munmap(x, len);
+	printf("message from last call:%d\n", *(int *)buf);
+
+	return 0;
+}
+
+/*
  * Takes command line arguments:
  * 0 - binary path
  * 1 - device path
