@@ -72,6 +72,12 @@ const DR: drm::DriverInfo = drm::DriverInfo {
 // The following is required by the compiler for drm::Driver (impl AllocImpl)
 struct EduObject;
 
+static EDU_VM_OPS: bindings::vm_operations_struct = bindings::vm_operations_struct {
+    open: Some(bindings::drm_gem_vm_open),
+    close: Some(bindings::drm_gem_vm_close),
+    ..unsafe { core::mem::zeroed() }
+};
+
 // ioctls for GEM. There's no reason to go around it for GEM.
 const EDU_IOCTLS: [drm::ioctl::DrmIoctlDescriptor; 1] = [drm::ioctl::DrmIoctlDescriptor {
     cmd: drm::ioctl::IOWR::<u64>(kernel::uapi::DRM_COMMAND_BASE),
@@ -90,6 +96,65 @@ impl drm::gem::DriverObject for EduObject {
         _args: Self::Args,
     ) -> impl PinInit<Self, Error> {
         Ok::<_, Error>(EduObject)
+    }
+
+    // Notice how these callbacks are passed our EduObject. This
+    // is not yet used for our example purposes, but are a better
+    // way than using driver_private directly.
+    //
+    // Called when a file gets a handle to this object
+    fn open(
+        _obj: &drm::gem::Object<EduObject>,
+        file: &drm::File<EduClient<'static>>,
+    ) -> Result {
+        let data = Page::alloc_page(GFP_KERNEL).unwrap();
+        let message: u64 = 777;
+
+        unsafe { data.write_raw(&message as *const u64 as *const u8, 0, 8) };
+        let client = EduClient { data: data, _bound: core::marker::PhantomData };
+
+        let filep: *mut c_void = KBox::into_raw(KBox::new(client, GFP_KERNEL).unwrap()).cast();
+
+        // Drm uses file->private, so we need to use the driver_private
+        // it makes available.
+        let drm_file = file as *const _ as *mut bindings::drm_file;
+        unsafe { (*drm_file).driver_priv = filep };
+        pr_info!("Ready for the mmap!\n");
+        Ok(())
+    }
+
+    // Called when a file's handle to this object is closed
+    fn close(
+        _obj: &drm::gem::Object<EduObject>,
+        file: &drm::File<EduClient<'static>>,
+    ) {
+        let drm_file = file as *const _ as *mut bindings::drm_file;
+        let filep = unsafe { (*drm_file).driver_priv };
+
+        pr_info!("Freeing descriptor\n");
+        // Unlike C, No free here: drm's postclose frees driver_priv
+    }
+
+    fn mmap(
+        _obj: &drm::gem::Object<EduObject>,
+        vma: *mut bindings::vm_area_struct,
+    ) -> Result {
+        // vma -> struct file -> drm_file -> driver_priv (our EduClient)
+        let drm_file = unsafe { (*(*vma).vm_file).private_data as *const bindings::drm_file };
+        let client = unsafe { &*((*drm_file).driver_priv as *const EduClient<'_>) };
+
+        // drm_gem_mmap_obj() takes an object ref that vm_ops->close must drop
+        unsafe { (*vma).vm_ops = &EDU_VM_OPS };
+
+        // drm_gem_mmap_obj() WARNs unless VM_DONTEXPAND is set
+        let vma = unsafe { kernel::mm::virt::VmaNew::from_raw(vma) };
+        vma.set_dontexpand();
+        // Map our page at the start of the vma, otherwise access = SIGBUS
+        let vma = vma.set_mixedmap();
+        let _ = vma.vm_insert_page(vma.start(), &client.data);
+
+        unsafe { bindings::vmf_insert_mixed(vma.as_ptr(), vma.start() + bindings::PAGE_SIZE, (BAR_START >> kernel::page::PAGE_SHIFT) as usize); }
+        Ok(())
     }
 }
 
@@ -136,6 +201,8 @@ unsafe extern "C" fn create_obj(
         Ok(obj) => obj,
         Err(e) => return e.to_errno(),
     };
+    // Free the EduClient DriverFile::open stored; the GEM open replaces it
+    unsafe { KBox::from_raw((*raw_file).driver_priv as *mut EduClient<'_>) };
 
     // The handle holds a reference so the object outlives this function
     if let Err(e) = obj.create_handle(file) {
