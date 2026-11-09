@@ -9,3 +9,4 @@ mkosi.repart
 image*
 init*
 kernel
+logs
